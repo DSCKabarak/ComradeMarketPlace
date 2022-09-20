@@ -6,4 +6,4 @@
 
 Install all requirements in the requirements.txt
 
-It is recommended to use a virtual enviroent in the development process.
+It is recommended to use a virtual environment in the development process.
