@@ -1,0 +1,4 @@
+.env
+cmp-venv/
+__pycache__/
+migrations/
