@@ -33,7 +33,7 @@ cmp_db_host = os.environ.get('DB_HOST') if os.environ.get('DB_HOST') else 'local
 cmp_db_port = os.environ.get('DB_PORT') if os.environ.get('DB_PORT') else '5432'
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 
@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_autoslug',
+    'merchant'
 ]
 
 MIDDLEWARE = [
