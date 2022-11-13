@@ -1,4 +1,4 @@
 .env
-cmp-venv/
+venv/
 __pycache__/
 migrations/
