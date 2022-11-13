@@ -14,6 +14,9 @@ class Category(models.Model):
         db_table = 'categories'
 
 
+    def get_absolute_url(self):
+        return self.name
+
 class Product(models.Model):
     category = models.ForeignKey(Category, verbose_name=("categories"), on_delete=models.CASCADE)
     name = models.CharField(max_length=256)
@@ -26,6 +29,10 @@ class Product(models.Model):
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def get_absolute_url(self):
+        return self.name
+
 
     def __str__(self):
         return self.name
