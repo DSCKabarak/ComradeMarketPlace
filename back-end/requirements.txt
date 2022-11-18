@@ -1,6 +1,6 @@
 asgiref==3.5.2
 Django==4.1.1
-django-autoslug-field==0.2.3
+django-autoslug==1.9.8
 django-phonenumber-field==7.0.0
 django-rest-framework==0.1.0
 djangorestframework==3.14.0
@@ -9,4 +9,3 @@ psycopg2-binary==2.9.3
 python-dotenv==0.21.0
 pytz==2022.2.1
 sqlparse==0.4.2
-django-autoslug

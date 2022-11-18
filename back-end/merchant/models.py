@@ -1,6 +1,7 @@
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import AbstractUser
+from autoslug import AutoSlugField
 from phonenumber_field.phonenumber  import PhoneNumber
 from django.conf import settings
 
