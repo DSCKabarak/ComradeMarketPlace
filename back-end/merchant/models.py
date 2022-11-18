@@ -13,7 +13,6 @@ class Category(models.Model):
     class Meta:
         db_table = 'categories'
 
-
     def get_absolute_url(self):
         return self.name
 
@@ -36,7 +35,3 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
-
-
-    class Meta:
-        db_table = 'products'
