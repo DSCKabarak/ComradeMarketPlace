@@ -2,6 +2,7 @@ from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import AbstractUser
 from autoslug import AutoSlugField
+import uuid
 from phonenumber_field.phonenumber  import PhoneNumber
 from django.conf import settings
 
@@ -20,7 +21,7 @@ class CustomUser(AbstractUser):
     user_type = models.CharField(max_length=90, choices=TYPE_CHOICES)
     avatar = models.FileField(upload_to='user/uploads/avatar/') 
     created_at = models.DateTimeField(auto_now_add=True)
-    upadated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -67,7 +68,45 @@ class Product(models.Model):
     def get_absolute_url(self):
         return self.name
 
+    def __str__(self):
+        return self.name
+
+
+
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='uploads/product/images/')
+
+    def get_image_url(self):
+        return self.image.url
 
     def __str__(self):
         return self.name
+
+
+class SoldProduct(models.Model):
+    merchant = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    buyer = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    sold = models.BooleanField(default=False)
+    in_stock = models.BooleanField(default=False)
+    sp_uuid = models.UUIDField(default=uuid.uuid4())
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self) -> str:
+        return self.sold
+    
+    def get_absolute_url(self):
+        return reverse("model_detail", kwargs={"pk": self.pk})
+    
+
+class ConfirmPurchase(models.Model):
+    merchant = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    purchase_confirmed = models.BooleanField(default=False)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    cp_uuid = models.UUIDField(default=uuid.uuid4())
+
+    def __str___(self):
+        return self.purchase_confirmed
 
