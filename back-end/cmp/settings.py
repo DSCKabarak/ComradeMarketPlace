@@ -26,9 +26,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-cmp_db_name = os.environ.get('DB_NAME') if os.environ.get('DB_NAME') else 'default_db'
-cmp_db_user = os.environ.get('DB_USER') if os.environ.get('DB_USER') else '@me!'
-cmp_db_password = os.environ.get('DB_PASS') if os.environ.get('DB_PASS') else 'pass'
+cmp_db_name = os.environ.get('DB_NAME') if os.environ.get('DB_NAME') else 'cmp_db'
+cmp_db_user = os.environ.get('DB_USER') if os.environ.get('DB_USER') else 'cmp_admin'
+cmp_db_password = os.environ.get('DB_PASS') if os.environ.get('DB_PASS') else 'cmp_admin_123'
 cmp_db_host = os.environ.get('DB_HOST') if os.environ.get('DB_HOST') else 'localhost'
 cmp_db_port = os.environ.get('DB_PORT') if os.environ.get('DB_PORT') else '5432'
 DEBUG = True
@@ -45,9 +45,12 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'rest_framework.authtoken',
     'django.contrib.staticfiles',
-    'django_autoslug',
-    'phonenumber_field',
+    'autoslug',
+    'accounts',
+    'cmp_api',
+    'rest_framework',
     'merchant',
 ]
 
@@ -60,6 +63,15 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ]
+}
+
+
 
 ROOT_URLCONF = 'cmp.urls'
 
@@ -96,7 +108,7 @@ DATABASES = {
         }
 }
 
-AUTH_USER_MODEL = 'merchant.CustomUser'
+AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
