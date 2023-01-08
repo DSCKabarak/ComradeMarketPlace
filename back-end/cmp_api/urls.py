@@ -1,8 +1,8 @@
 from django.urls import path, include
 from rest_framework import routers
-from .views import AuthViewSet
 from .views import (
     ProductListAPIView,
+    AuthViewSet,
 )
 
 router = routers.DefaultRouter(trailing_slash=False)
