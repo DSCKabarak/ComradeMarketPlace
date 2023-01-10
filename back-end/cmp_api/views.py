@@ -13,7 +13,8 @@ from .serializers import (
     UserLoginSerializer,
     AuthUserSerializer,
     UserRegisterSerializer,
-    PasswordChangeSerializer
+    PasswordChangeSerializer,
+    AccountProfileSerializer
 
     )
 from merchant.models import (
@@ -34,7 +35,8 @@ class AuthViewSet(viewsets.GenericViewSet):
     serializer_classes = {
         'login': UserLoginSerializer,
         'register': UserRegisterSerializer,
-        'password_change': PasswordChangeSerializer
+        'password_change': PasswordChangeSerializer,
+        'profile': AccountProfileSerializer
     }
 
     @action(methods=['POST', ], detail=False)
@@ -52,6 +54,13 @@ class AuthViewSet(viewsets.GenericViewSet):
         user = create_user_account(**serializer.validated_data)
         data = AuthUserSerializer(user).data
         return Response(data=data, status=status.HTTP_201_CREATED)
+
+    @action(methods=['GET', ], detail=False, permission_classes=[IsAuthenticated, ])
+    def profile(self, request):
+        profile = User.objects.get(email=request.user.email)
+        serializer = self.get_serializer(profile)
+        data = serializer.data
+        return Response(data=data, status=status.HTTP_200_OK)
 
     @action(methods=['POST', ], detail=False)
     def logout(self, request):
