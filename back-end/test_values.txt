@@ -1,0 +1,11 @@
+{
+    "merchant": 1,
+    "category": 1,
+    "product_name": "Tecno Cammon 16",
+    "price": 12000,
+    "in_stock": true,
+    "tag": "used",
+    "brand": "Tecno",
+    "key_features": "MediaTek Helio G70 gaming-focused processor. It features a 6.8 inches HD+ display, a 5,000mAh battery with 18W flash charge, 64GB or128GB ROM ( vary on markets) + 4GB RAM, and runs on HiOS 6.0 based on Android 10",
+    "description": "Tecno releases a new device, The Tecno Camon 16. Tecno Camon 16 has a 6.78 inches (1080 x 2460 pixels) display, with a processor speed of Octa-core (2×2.05 GHz Cortex-A76 & 6×2.0 GHz Cortex-A55). The Operating System is Android 10. It has a RAM size of 6 GB, a ROM of 128 GB."
+}
