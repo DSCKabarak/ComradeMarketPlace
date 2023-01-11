@@ -24,7 +24,18 @@ source venv/bin/activate
 ```
 pip install -r requirements.txt
 ```
-5. Create a new file named `.env`in the project root directory to store your environment variables.
+5. Create a new file named `.env`in the project root directory to store your environment variables. In your `.env` file, you can add environment variables like this:
+```
+SECRET_KEY= <your_secret_key>
+
+DEBUG=True
+#Database
+DB_NAME= <your_db_name>
+DB_USER= <your_db_user>
+DB_PASS= <your_db_password>
+DB_HOST= <your_db_host>
+DB_PORT= <your_db_port>
+```
 6. Run the migrations:
 ```
 python manage.py makemigrations
