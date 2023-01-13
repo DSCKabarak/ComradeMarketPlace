@@ -31,7 +31,7 @@ cmp_db_user = os.environ.get('DB_USER') if os.environ.get('DB_USER') else 'cmp_a
 cmp_db_password = os.environ.get('DB_PASS') if os.environ.get('DB_PASS') else 'cmp_admin_123'
 cmp_db_host = os.environ.get('DB_HOST') if os.environ.get('DB_HOST') else 'localhost'
 cmp_db_port = os.environ.get('DB_PORT') if os.environ.get('DB_PORT') else '5432'
-DEBUG = os.environ.get('DEBUG')
+DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
@@ -40,7 +40,6 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 # Application definition
 
 INSTALLED_APPS = [
-    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -153,11 +152,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = 'static/'
 
-
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static')
+]
 
 MEDIA_URL = '/media/'
 
