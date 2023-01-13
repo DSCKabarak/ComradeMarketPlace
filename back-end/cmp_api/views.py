@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework  import status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from accounts.utils import get_and_authenticate_user, create_user_account
 from django.core.exceptions import ImproperlyConfigured
@@ -9,6 +9,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model, logout
 from .serializers import (
     ProductSerializer,
+    ProductImageSerializer,
     EmptySerializer,
     UserLoginSerializer,
     AuthUserSerializer,
@@ -67,7 +68,8 @@ class AuthViewSet(viewsets.GenericViewSet):
         logout(request)
         data = {'success': 'Successfully logged out'}
         return Response(data=data, status=status.HTTP_200_OK)
-
+    
+    
     @action(methods=['POST', ], detail=False, permission_classes=[IsAuthenticated, ])
     def password_change(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -76,6 +78,7 @@ class AuthViewSet(viewsets.GenericViewSet):
         request.user.save()
         return Response(status.HTTP_204_NO_CONTENT)
     
+    
     def get_serializer_class(self):
         if not isinstance(self.serializer_classes, dict):
             raise ImproperlyConfigured("serializer_classes should be a dict mapping.")
@@ -83,43 +86,28 @@ class AuthViewSet(viewsets.GenericViewSet):
         if self.action in self.serializer_classes.keys():
             return self.serializer_classes[self.action]
         return super().get_serializer_class()
+    
 
-
-
-class ProductListAPIView(APIView):
-
-    # add permission to check if user is authenticated
+class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
     
-    # List all
-    def get(self, request, *args, **kwargs):
-        """
-        List all product items
-        """
-
-        products = Product.objects.all()
-        serializer = ProductSerializer(products, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get_queryset(self):
+        return self.queryset.filter(merchant=self.request.user)
     
-    def post(self, request, *args, **kwargs):
-        """
-        Create product item
-        """
-        data = {
-            'merchant': request.data.get('merchant'),
-            'category': request.data.get('category'),
-            'product_name': request.data.get('product_name'),
-            'price': request.data.get('price'),
-            'in_stock': request.data.get('in_stock'),
-            'tag': request.data.get('tag'),
-            'brand': request.data.get('brand'),
-            'key_features': request.data.get('key_features'),
-            'description': request.data.get('description'),
-        }
-
-        serializer = ProductSerializer(data=data)
+    @action(methods=['GET'], detail=True)
+    def images(self, request, pk=None):
+        product = self.get_object()
+        images = ProductImage.objects.filter(product=product)
+        serializer = ProductImageSerializer(images, many=True)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+    
+    @action(methods=['POST'], detail=True)
+    def images(self, request, pk=None):
+        product = self.get_object()
+        serializer = ProductImageSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer.save(product=product)
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)

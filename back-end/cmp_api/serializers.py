@@ -87,4 +87,7 @@ class ProductSerializer(serializers.ModelSerializer):
         'slug', 'brand', 'key_features', 'description', 'created_at', 'updated_at']
 
 
-
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = ['id', 'product', 'image', 'caption']
