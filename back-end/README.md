@@ -66,7 +66,7 @@ The following API endpoints are available for interacting with the CMP backend:
 | POST | /comrade-market-place/api/auth/register | To create a new user account |
 | POST | /comrade-market-place/api/auth/logout | To logout of a logged in account |
 | GET | /comrade-market-place/api/auth/profile | To get a logged in user's profile details |
-| GET | /comrade-market-place/products | To get a list of all products |
+| GET | /comrade-market-place/api/products | To get a list of all products |
 
 - You can add additional endpoints as required.
 - You can also include the sample request and response of each endpoint with proper format and data type
