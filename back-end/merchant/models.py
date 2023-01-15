@@ -93,3 +93,17 @@ class ConfirmPurchase(models.Model):
     
     class Meta:
         db_table = 'confirm_purchases'
+
+
+class Comment(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    comment_uuid = models.UUIDField(default=uuid.uuid4())
+
+    def __str__(self):
+        return self.comment
+    
+    class Meta:
+        db_table = 'comments'

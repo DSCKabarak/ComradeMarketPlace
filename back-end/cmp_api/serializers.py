@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model, password_validation
 from django.contrib.auth.models import BaseUserManager
 from rest_framework.authtoken.models import Token
 from merchant.models import (
+    Comment, 
     Product,
     ProductImage,
     SoldProduct,
@@ -30,6 +31,11 @@ class AuthUserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
     
     def get_auth_token(self, obj):
+        try:
+            token = Token.objects.get(user=obj)
+            token.delete()
+        except Token.DoesNotExist:
+            pass
         token = Token.objects.create(user=obj)
         return token.key
 
@@ -92,4 +98,8 @@ class ProductSerializer(serializers.ModelSerializer):
         'slug', 'brand', 'key_features', 'description', 'created_at', 'updated_at']
 
 
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ['product', 'user', 'comment', 'created_at', 'updated_at', 'comment_id']
 
