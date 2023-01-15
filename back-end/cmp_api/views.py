@@ -8,6 +8,7 @@ from rest_framework import permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model, logout
 from .serializers import (
+    ProductImageSerializer,
     ProductSerializer,
     EmptySerializer,
     UserLoginSerializer,
@@ -161,3 +162,24 @@ class CommentViewSet(viewsets.ModelViewSet):
         comment = Comment.objects.get(id=request.data.get('id'))
         comment.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ProductImageViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Product.objects.all()
+    serializer_class = ProductImageSerializer
+
+    @action(methods=['GET', 'POST'], detail=True, serializer_class=ProductImageSerializer)
+    def images(self, request, pk=None):
+        product = self.get_object()
+
+        if request.method == 'GET':
+            images = ProductImage.objects.filter(product=product)
+            serializer = self.get_serializer(images, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        elif request.method == 'POST':
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(product=product)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
