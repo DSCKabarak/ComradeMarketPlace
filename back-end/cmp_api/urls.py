@@ -8,7 +8,7 @@ from cmp_api.views import (
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register('api/auth', AuthViewSet, basename='auth')
-router.register('api/product-images', ProductImageViewSet, basename='product-images')
+router.register('api/productS/images', ProductImageViewSet, basename='product-images')
 
 urlpatterns = [
     path(r'', include(router.urls)),
