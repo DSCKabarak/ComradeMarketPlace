@@ -129,7 +129,7 @@ class ProductListAPIView(APIView):
 class ProductImageViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Product.objects.all()
-    serializer_class = ProductSerializer
+    serializer_class = ProductImageSerializer
 
     @action(methods=['GET', 'POST'], detail=True, serializer_class=ProductImageSerializer)
     def images(self, request, pk=None):
@@ -138,7 +138,7 @@ class ProductImageViewSet(viewsets.ModelViewSet):
         if request.method == 'GET':
             images = ProductImage.objects.filter(product=product)
             serializer = self.get_serializer(images, many=True)
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
         elif request.method == 'POST':
             serializer = self.get_serializer(data=request.data)
