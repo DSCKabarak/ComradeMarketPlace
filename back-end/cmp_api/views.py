@@ -138,7 +138,7 @@ class CategoryListAPIView(APIView):
         List all category items
         """
         categories= Category.objects.all()
-        serializer = ProductSerializer(categories, many=True)
+        serializer = CategorySerializer(categories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     def post(self, request, *args, **kwargs):
