@@ -6,7 +6,7 @@ These instructions will get you a copy of the project up and running on your loc
 - `Python 3.6` and above
 - `django  4.1.1`
 - Postgresql => Version 13
-### Generating a Secret Key
+### Generating a Secret Key (This is Optional)
 1. Run the following command to generate a new secret key:
 ```
 python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
