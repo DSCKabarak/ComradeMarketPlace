@@ -83,7 +83,7 @@ class AccountProfileSerializer(serializers.ModelSerializer):
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
-        fields = ['id', 'product', 'image', 'caption']
+        fields = ['id', 'product', 'image', 'description', 'created_at', 'updated_at']
         
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
