@@ -14,7 +14,8 @@ from .serializers import (
     AuthUserSerializer,
     UserRegisterSerializer,
     PasswordChangeSerializer,
-    AccountProfileSerializer
+    AccountProfileSerializer, 
+    CategorySerializer
 
     )
 from merchant.models import (
@@ -118,6 +119,36 @@ class ProductListAPIView(APIView):
         }
 
         serializer = ProductSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CategoryListAPIView(APIView):
+
+
+    permission_classes = [permissions.IsAuthenticated]
+    
+    # List all
+    def get(self, request, *args, **kwargs):
+      
+
+        categories= Category.objects.all()
+        serializer = ProductSerializer(categories, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request, *args, **kwargs):
+        """
+        Create product item
+        """
+        data = {
+            'category_name': request.data.get('category_name'),
+            'sub_category': request.data.get('sub_category'),
+        }
+
+        serializer = CategorySerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)

@@ -10,4 +10,5 @@ router.register('api/auth', AuthViewSet, basename='auth')
 urlpatterns = [
     path(r'', include(router.urls)),
     path('products', ProductListAPIView.as_view(), name='products')
+    path('products', ProductListAPIView.as_view(), name='products')
 ]
