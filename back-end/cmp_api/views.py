@@ -134,14 +134,16 @@ class CategoryListAPIView(APIView):
     # List all
     def get(self, request, *args, **kwargs):
       
-
+        """
+        List all category items
+        """
         categories= Category.objects.all()
         serializer = ProductSerializer(categories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     def post(self, request, *args, **kwargs):
         """
-        Create product item
+        Create categories
         """
         data = {
             'category_name': request.data.get('category_name'),
