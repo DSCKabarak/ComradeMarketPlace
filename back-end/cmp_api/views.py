@@ -56,19 +56,19 @@ class AuthViewSet(viewsets.GenericViewSet):
 
     @action(methods=['GET', ], detail=False, permission_classes=[IsAuthenticated, ])
     def profile(self, request):
-        profile = User.objects.get(email=request.user.email)
-        serializer = self.get_serializer(profile)
-        data = serializer.data
-        return Response(data=data, status=status.HTTP_200_OK)
-    
-    @action(methods=['PUT', ], detail=False, permission_classes=[IsAuthenticated, ])
-    def update_profile(self, request):
-        profile = User.objects.get(email=request.user.email)
-        serializer = self.get_serializer(profile, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        data = serializer.data
-        return Response(data=data, status=status.HTTP_200_OK)
+        if request.method == 'GET':
+            profile = User.objects.get(email=request.user.email)
+            serializer = self.get_serializer(profile)
+            data = serializer.data
+            return Response(data=data, status=status.HTTP_200_OK)
+        elif request.method == 'PUT':
+            profile = User.objects.get(email=request.user.email)
+            serializer = self.get_serializer(profile, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            data = serializer.data
+            return Response(data=data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=['POST', ], detail=False)
     def logout(self, request):
