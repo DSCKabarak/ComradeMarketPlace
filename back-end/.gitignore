@@ -4,3 +4,5 @@ __pycache__/
 */__pycache__/*
 migrations/
 */migrations/
+db.sqlite3
+cmp/settings.py

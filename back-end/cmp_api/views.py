@@ -17,6 +17,7 @@ from .serializers import (
     PasswordChangeSerializer,
     AccountProfileSerializer,
     CommentSerializer,
+    CategorySerializer,
 
     )
 from merchant.models import (
@@ -183,3 +184,33 @@ class ProductImageViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save(product=product)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+    @action(methods=['GET', ], detail=False)
+    def get_categories(self, request):
+        categories = Category.objects.all()
+        serializer = self.get_serializer(categories, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @action(methods=['POST', ], detail=False)
+    def create_category(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(methods=['PUT', ], detail=False)
+    def update_category(self, request):
+        category = Category.objects.get(id=request.data.get('id'))
+        serializer = self.get_serializer(category, data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

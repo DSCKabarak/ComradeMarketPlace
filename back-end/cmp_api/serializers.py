@@ -97,9 +97,23 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = ['merchant', 'category', 'product_name', 'price', 'in_stock', 'tag',
         'slug', 'brand', 'key_features', 'description', 'created_at', 'updated_at']
 
+class CategorySerializer (serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['category_name', 'sub_category', 'slug']
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ['product', 'user', 'comment', 'created_at', 'updated_at', 'comment_id']
 
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ['product', 'user', 'comment', 'created_at', 'updated_at', 'comment_id']
+
+
+class CategorySerializer (serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['category_name', 'sub_category', 'slug']
