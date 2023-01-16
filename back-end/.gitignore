@@ -5,5 +5,4 @@ __pycache__/
 migrations/
 */migrations/
 db.sqlite3
-/settings.py
-git
+cmp/settings.py
