@@ -5,7 +5,7 @@ from .views import (
     AuthViewSet,
     CommentViewSet,
     ProductImageViewSet,
-    CategoryViewSet
+    CategoryViewSet,
 )
 
 router = routers.DefaultRouter(trailing_slash=False)
