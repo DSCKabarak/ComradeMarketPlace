@@ -69,6 +69,8 @@ The following API endpoints are available for interacting with the CMP backend:
 | GET | /comrade-market-place/api/products | To get a list of all products |
 | GET | /comrade-market-place/api/products/images | To get images for a specific product |
 | POST | /comrade-market-place/api/products/images | To upload images for a specific product |
+| PUT | /comrade-market-place/api/products/images | To update an image for a specific product |
+| DELETE | /comrade-market-place/api/products/images | To delete an image for a specific product |
 
 ### Tips
 - You can add additional endpoints as required.
