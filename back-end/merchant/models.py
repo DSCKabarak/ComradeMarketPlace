@@ -2,7 +2,6 @@ from django.db import models
 from autoslug import AutoSlugField
 import uuid
 from accounts.models import CustomUser
-from django.conf import settings
 
 
 class Category(models.Model):
@@ -45,14 +44,12 @@ class Product(models.Model):
         db_table = 'products'
 
 
-
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='uploads/product/images/')
     description = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
 
     def get_image_url(self):
         return self.image.url
@@ -62,38 +59,6 @@ class ProductImage(models.Model):
     
     class Meta:
         db_table = 'images'
-
-
-class SoldProduct(models.Model):
-    merchant = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='merchant')
-    buyer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='buyer')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    sold = models.BooleanField(default=False)
-    in_stock = models.BooleanField(default=False)
-    sp_uuid = models.UUIDField(default=uuid.uuid4())
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    def __str__(self) -> str:
-        return self.sold
-
-    
-    class Meta:
-        db_table = 'sold_products'
-    
-
-class ConfirmPurchase(models.Model):
-    merchant = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    purchase_confirmed = models.BooleanField(default=False)
-    message = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    cp_uuid = models.UUIDField(default=uuid.uuid4())
-
-    def __str___(self):
-        return self.purchase_confirmed
-    
-    class Meta:
-        db_table = 'confirm_purchases'
-
 
 class Comment(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
@@ -107,3 +72,34 @@ class Comment(models.Model):
     
     class Meta:
         db_table = 'comments'
+
+
+# class SoldProduct(models.Model):
+#     merchant = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='merchant')
+#     buyer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='buyer')
+#     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+#     sold = models.BooleanField(default=False)
+#     in_stock = models.BooleanField(default=False)
+#     sp_uuid = models.UUIDField(default=uuid.uuid4())
+#     created_at = models.DateTimeField(auto_now_add=True)
+    
+#     def __str__(self) -> str:
+#         return self.sold
+
+    
+#     class Meta:
+#         db_table = 'sold_products'
+    
+
+# class ConfirmPurchase(models.Model):
+#     merchant = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+#     purchase_confirmed = models.BooleanField(default=False)
+#     message = models.TextField()
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     cp_uuid = models.UUIDField(default=uuid.uuid4())
+
+#     def __str___(self):
+#         return self.purchase_confirmed
+    
+#     class Meta:
+#         db_table = 'confirm_purchases'
