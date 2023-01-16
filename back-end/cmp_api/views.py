@@ -8,23 +8,22 @@ from rest_framework import permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model, logout
 from .serializers import (
+    ProductImageSerializer,
     ProductSerializer,
     EmptySerializer,
     UserLoginSerializer,
     AuthUserSerializer,
     UserRegisterSerializer,
     PasswordChangeSerializer,
-    AccountProfileSerializer, 
-    CategorySerializer
+    AccountProfileSerializer,
+    CommentSerializer,
 
     )
 from merchant.models import (
     Product,
     ProductImage,
-    SoldProduct,
-    ConfirmPurchase,
     Category,
-    CustomUser,
+    Comment,
 )
 
 User = get_user_model()
@@ -58,10 +57,19 @@ class AuthViewSet(viewsets.GenericViewSet):
 
     @action(methods=['GET', ], detail=False, permission_classes=[IsAuthenticated, ])
     def profile(self, request):
-        profile = User.objects.get(email=request.user.email)
-        serializer = self.get_serializer(profile)
-        data = serializer.data
-        return Response(data=data, status=status.HTTP_200_OK)
+        if request.method == 'GET':
+            profile = User.objects.get(email=request.user.email)
+            serializer = self.get_serializer(profile)
+            data = serializer.data
+            return Response(data=data, status=status.HTTP_200_OK)
+        elif request.method == 'PUT':
+            profile = User.objects.get(email=request.user.email)
+            serializer = self.get_serializer(profile, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            data = serializer.data
+            return Response(data=data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=['POST', ], detail=False)
     def logout(self, request):
@@ -86,73 +94,92 @@ class AuthViewSet(viewsets.GenericViewSet):
         return super().get_serializer_class()
 
 
-
-class ProductListAPIView(APIView):
-
-    # add permission to check if user is authenticated
+class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    
-    # List all
-    def get(self, request, *args, **kwargs):
-        """
-        List all product items
-        """
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
 
+    @action(methods=['GET', ], detail=False)
+    def get_products(self, request):
         products = Product.objects.all()
-        serializer = ProductSerializer(products, many=True)
+        serializer = self.get_serializer(products, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-    def post(self, request, *args, **kwargs):
-        """
-        Create product item
-        """
-        data = {
-            'merchant': request.data.get('merchant'),
-            'category': request.data.get('category'),
-            'product_name': request.data.get('product_name'),
-            'price': request.data.get('price'),
-            'in_stock': request.data.get('in_stock'),
-            'tag': request.data.get('tag'),
-            'brand': request.data.get('brand'),
-            'key_features': request.data.get('key_features'),
-            'description': request.data.get('description'),
-        }
-
-        serializer = ProductSerializer(data=data)
-        if serializer.is_valid():
+    @action(methods=['POST', ], detail=False)
+    def create_product(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(methods=['PUT', ], detail=False)
+    def update_product(self, request):
+        product = Product.objects.get(id=request.data.get('id'))
+        serializer = self.get_serializer(product, data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(methods=['DELETE', ], detail=False)
+    def delete_product(self, request):
+        product = Product.objects.get(id=request.data.get('id'))
+        product.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class CategoryListAPIView(APIView):
-
-
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
-    # List all
-    def get(self, request, *args, **kwargs):
-      
-        """
-        List all category items
-        """
-        categories= Category.objects.all()
-        serializer = CategorySerializer(categories, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    def post(self, request, *args, **kwargs):
-        """
-        Create categories
-        """
-        data = {
-            'category_name': request.data.get('category_name'),
-            'sub_category': request.data.get('sub_category'),
-        }
 
-        serializer = CategorySerializer(data=data)
-        if serializer.is_valid():
+    @action(methods=['GET', ], detail=False)
+    def get_comments(self, request):
+        comments = Comment.objects.all()
+        serializer = self.get_serializer(comments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(methods=['POST', ], detail=False)
+    def post_comment(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(methods=['PUT', ], detail=False)
+    def update_comment(self, request):
+        comment = Comment.objects.get(id=request.data.get('id'))
+        serializer = self.get_serializer(comment, data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(methods=['DELETE', ], detail=False)
+    def delete_comment(self, request):
+        comment = Comment.objects.get(id=request.data.get('id'))
+        comment.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ProductImageViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Product.objects.all()
+    serializer_class = ProductImageSerializer
+
+    @action(methods=['GET', 'POST'], detail=True, serializer_class=ProductImageSerializer)
+    def images(self, request, pk=None):
+        product = self.get_object()
+
+        if request.method == 'GET':
+            images = ProductImage.objects.filter(product=product)
+            serializer = self.get_serializer(images, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        elif request.method == 'POST':
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(product=product)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
