@@ -183,3 +183,35 @@ class ProductImageViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save(product=product)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class CategoryViewSet(APIView):
+
+
+    permission_classes = [permissions.IsAuthenticated]
+    
+    # List all
+    def get(self, request, *args, **kwargs):
+      
+        """
+        List all category items
+        """
+        categories= Category.objects.all()
+        serializer = CategorySerializer(categories, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request, *args, **kwargs):
+        """
+        Create categories
+        """
+        data = {
+            'category_name': request.data.get('category_name'),
+            'sub_category': request.data.get('sub_category'),
+        }
+
+        serializer = CategorySerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
