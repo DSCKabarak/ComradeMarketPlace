@@ -103,3 +103,10 @@ class Comment(models.Model):
     
 #     class Meta:
 #         db_table = 'confirm_purchases'
+
+class Bookmark(models.Model):
+    user = models.ForeignKey(CustomUser, null=False, on_delete=models.CASCADE)
+    product_id = models.ForeignKey(Product, null=False, on_delete=models.CASCADE)
+    favorite = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now_add=True)

@@ -7,6 +7,7 @@ from merchant.models import (
     Product,
     ProductImage,
     Category,
+    Bookmark
 )
 
 User = get_user_model()
@@ -120,3 +121,10 @@ class CategorySerializer (serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['category_name', 'sub_category', 'slug']
+        
+class BookmarkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Bookmark
+        fields=['user','product_id','favorite','created_at','updated_at']
+
+
