@@ -169,7 +169,7 @@ class ProductImageViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductImageSerializer
 
-    @action(methods=['GET', 'POST'], detail=True, serializer_class=ProductImageSerializer)
+    @action(methods=['GET', 'POST', 'PUT', 'DELETE'], detail=True, serializer_class=ProductImageSerializer)
     def images(self, request, pk=None):
         product = self.get_object()
 
@@ -178,11 +178,27 @@ class ProductImageViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(images, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
+        # Saving the new image and returning the serialized data 
+        # with a 201 status code indicating a successful creation.
         elif request.method == 'POST':
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save(product=product)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        #Updating an existing product image using PUT method.
+        elif request.method == 'PUT':
+            product_image = self.get_object()
+            serializer = self.get_serializer(product_image, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        #Delete the specific product image
+        elif request.method == 'DELETE':
+            product_image = self.get_object()
+            product_image.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
