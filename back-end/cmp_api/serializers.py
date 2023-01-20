@@ -94,7 +94,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['merchant', 'category', 'product_name', 'price', 'in_stock', 'tag',
+        fields = ['id', 'merchant', 'category', 'product_name', 'price', 'in_stock', 'tag',
         'slug', 'brand', 'key_features', 'description', 'created_at', 'updated_at']
 
 
