@@ -17,6 +17,7 @@ from .serializers import (
     AccountProfileSerializer,
     CommentSerializer,
     CategorySerializer,
+    BookmarkSerializer,
 
     )
 from merchant.models import (
@@ -24,6 +25,7 @@ from merchant.models import (
     ProductImage,
     Category,
     Comment,
+    Bookmark,
 )
 
 User = get_user_model()
@@ -228,3 +230,38 @@ class CategoryViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class BookmarkViewSet(viewsets.ModelViewerSet):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Bookmark.objects.all()
+    serializer_class = BookmarkSerializer
+
+    @action(methods=['GET', ], detail=False)
+    def get_bookmarks(self, request):
+        bookmark = Bookmark.objects.all()
+        serializer = self.get_serializer(Bookmark, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(methods=['POST', ], detail=False)
+    def create_bookmark(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(methods=['PUT', ], detail=False)    
+    def update_bookmark(self,request):
+        bookmark=Bookmark.objects.get(id=request.data.get('id'))
+        seriaizer=self.get_serializer    
+        serializer = self.get_serializer(bookmark, data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    @action(methods=['DELETE', ], detail=False)
+    def delete_bookmark(self, request):  
+        bookmark = Bookmark.objects.get(id=request.data.get('id'))
+        bookmark.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
