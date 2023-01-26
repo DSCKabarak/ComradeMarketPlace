@@ -37,8 +37,8 @@ const Login = () => {
             <span className="login-page__or">or</span>
             </div>
             <div className="login-page__oauth">
-               <button className="m-0 login-page__oauth-facebook"><i class="fa-brands fa-facebook"></i>Continue with Facebook</button>
-               <button className="login-page__oauth-apple"><i class="fa-brands fa-apple"></i>Continue with Apple</button>
+               <div className="m-0 login-page__oauth-facebook"><i class="fa-brands fa-facebook"></i>{" "}Continue with Facebook</div>
+               <div className="login-page__oauth-apple"><i class="fa-brands fa-apple"></i>{" "}Continue with Apple</div>
             </div>
          </section>
          <div className="login-page__circle"></div>
