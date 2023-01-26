@@ -1,7 +1,11 @@
-import Welcome from "../components/Welcome";
+import Login from "../components/Login/Login";
 
 function App() {
-  return <Welcome />;
+  return(
+    <>
+      <Login />
+    </>
+  )
 }
 
 export default App;

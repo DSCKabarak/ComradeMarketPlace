@@ -1,0 +1,43 @@
+/* || RESETS */
+* {
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+}
+
+/* || UTILITY CLASSES */
+.center {
+   text-align: center;
+}
+
+img {
+   display: block;
+   min-width: 100%;
+}
+
+.nowrap {
+   white-space: nowrap;
+}
+
+/* || VARIABLES */
+:root {
+   /* fonts */
+   --FF: Inter, sans-serif;
+   --FS: clamp(1.5rem, 3vh, 2.25rem);
+   --BODY-BGCOLOR: white;
+
+   /* colors */
+
+}
+
+/* || GENERAL TAGS */
+html {
+   scroll-behavior: smooth;
+   font-family: var(--FF);
+   font-size: var(--FS);
+   background-color: var(--BODY-BGCOLOR);
+}
+
+body {
+   width: 100%;
+}
