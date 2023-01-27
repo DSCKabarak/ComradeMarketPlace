@@ -93,6 +93,7 @@
    padding: 0.5rem 1rem;
    font-size: larger;
    border-radius: 20px;
+   border: none;
    background-color: #80B483;
    margin-bottom: 1rem;
 }
@@ -105,21 +106,15 @@
    margin: auto;
 }
 
-.login-page__oauth-facebook{
-   background-color: #3B5998;
-   color: white;
-   margin-bottom: 1rem;
-}
-
-.login-page__oauth-facebook:hover, .login-page__oauth-apple:hover{
+.login-page__oauth-google:hover{
    cursor: pointer;
 }
 
-.login-page__oauth-apple {
+.login-page__oauth-google {
    background-color: white;
-   color: black;
+   color: #000;
 }
-.login-page__oauth-apple, .login-page__oauth-facebook {
+.login-page__oauth-google {
    border: 1px solid black;
    width: 100%;
    padding: 0.25rem 1rem;
@@ -139,7 +134,7 @@
 }
 
 .login-page__or:before {
-   border-left: 1px solid black;
+   border-left: 3px solid black;
    content: "";
    display: block;
    height: 165px;
@@ -151,7 +146,7 @@
 }
 
 .login-page__or:after {
-   border-left: 1px solid black;
+   border-left: 3px solid black;
    content: "";
    display: block;
    height: 165px;
