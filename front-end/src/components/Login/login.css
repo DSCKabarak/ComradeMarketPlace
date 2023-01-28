@@ -106,7 +106,7 @@
    margin: auto;
 }
 
-.login-page__oauth-google:hover{
+.login-page__oauth-google:hover, #login-page__sign-in-link{
    cursor: pointer;
 }
 
@@ -155,6 +155,14 @@
    top: 120px;
    width: 1px;
    z-index: 0;
+}
+
+/* modal styles */
+
+
+.modal__header {
+   background-color: #EFDADA;
+   font-size: medium;
 }
 
 @media screen and (max-width: 576px) {
