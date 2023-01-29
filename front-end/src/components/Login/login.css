@@ -67,7 +67,7 @@ Login Component Styles .login-page {
 .login-page__form-input {
 	display: block;
 	width: 90%;
-	background-color: #efdada;
+	background-color: #efdada!important;
 	padding: 0.25rem;
 	border-radius: 10px;
 }
