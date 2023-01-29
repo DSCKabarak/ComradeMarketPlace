@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import bgImage from "../../assets/login-page-bg.png";
 import "./login.css";
 import Modal from 'react-bootstrap/Modal';
 
+const Login = () => {
 
-
-const Login = (props) => {
+   const navigate = useNavigate();
 
    const [loginFormData, setLoginFormData] = useState({
       email: "",
@@ -54,13 +54,21 @@ const Login = (props) => {
             'Content-Type': 'application/json'
          }
       })
-         .then(res => res.json())
-         .then(data => {
-            console.log(data);
-            props.login();
-            return <Navigate to="/products" replace />
+         .then(res => {
+            if (!res.ok) {
+               throw new Error("Error authenticating")
+            }
+            return res.json()
          })
-         .catch(err => console.log(err))
+         .then((data) => {
+            sessionStorage.setItem('user', JSON.stringify(data))
+            navigate("/")
+         })
+         .catch(err => {
+            console.log("Error ", err)
+            sessionStorage.setItem('user', null)
+            navigate("/login")
+         })
    }
 
    function handleOnSubmit(e) {
@@ -75,9 +83,9 @@ const Login = (props) => {
       })
          .then(res => res.json())
          .then(data => {
-            console.log(data);
+            console.log(data)
          })
-         .catch(err => console.log(err))
+         .catch(err => console.log("Err", err))
    }
 
    return (
@@ -111,12 +119,13 @@ const Login = (props) => {
             backgroundImage: `url(${bgImage})`,
             backgroundRepeat: "no-repeat",
             backgroundSize: "60% auto",
-            backgroundPosition: "right 50% top 40%"
+            backgroundPosition: "right 50% top 40%",
+            minHeight: "100vh",
          }}>
             <section className="login-page__header">
 
                <h1>Kabu <span id="login-page__shop">Shop</span></h1>
-               <p>Already a member? <span id="login-page__sign-in-link" onClick={handleShow} >sign in</span></p>
+               <p><span className="d-none d-md-inline">Already a member? </span> <span id="login-page__sign-in-link" onClick={handleShow} >sign in</span></p>
             </section >
 
 
@@ -125,11 +134,11 @@ const Login = (props) => {
 
                <form onSubmit={handleOnSubmit} className="login-page__form">
                   <div className="login-page__form-names">
-                     <input type="text" name="first_name" id="first_name" placeholder="First Name" value={registerFormData.first_name} onChange={handleOnChange} className="login-page__form-input" />
-                     <input type="text" name="last_name" id="last_name" placeholder="Last Name" value={registerFormData.last_name} onChange={handleOnChange} className="login-page__form-input" />
+                     <input type="text" name="first_name" id="first_name" placeholder="First Name" value={registerFormData.first_name} onChange={handleOnChange} className="mb-3 mb-md-6 login-page__form-input" />
+                     <input type="text" name="last_name" id="last_name" placeholder="Last Name" value={registerFormData.last_name} onChange={handleOnChange} className="mb-3 mb-md-6 login-page__form-input" />
                   </div>
-                  <input type="email" name="email" id="email" placeholder="Email" value={registerFormData.email} onChange={handleOnChange} className="login-page__form-input" />
-                  <input type="password" name="password" id="password" placeholder="Password" value={registerFormData.password} onChange={handleOnChange} className="login-page__form-input" />
+                  <input type="email" name="email" id="email" placeholder="Email" value={registerFormData.email} onChange={handleOnChange} className="mb-3 mb-md-6 login-page__form-input" />
+                  <input type="password" name="password" id="password" placeholder="Password" value={registerFormData.password} onChange={handleOnChange} className="mb-3 mb-md-6 login-page__form-input" />
 
                   <p className="d-none d-md-block login-page__policy">
                      By Creating an account, you agree to our <span className="login-page__user-agreement">User Agreement- opens in new window
