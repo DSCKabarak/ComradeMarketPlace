@@ -1,7 +1,14 @@
-import Welcome from "../components/Welcome";
+import React from "react";
+import { BrowserRouter } from "react-router-dom";
+import Main from "../components/Main/Main";
 
 function App() {
-  return <Welcome />;
+  
+  return (
+      <BrowserRouter>
+          <Main />
+      </BrowserRouter>
+  )
 }
 
 export default App;
