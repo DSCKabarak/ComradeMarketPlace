@@ -4,7 +4,7 @@ django-autoslug==1.9.8
 django-jazzmin==2.6.0
 django-rest-framework==0.1.0
 djangorestframework==3.14.0
-Pillow==9.2.0
+Pillow==10.3.0
 psycopg2-binary==2.9.3
 python-dotenv==0.21.0
 pytz==2022.2.1
