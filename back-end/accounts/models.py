@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils.text import gettextlazy  as _
 from accounts.utils import UserManager
 
 
@@ -10,7 +11,7 @@ class CustomUser(AbstractUser):
         ('buyer', 'buyer')
     )
     username = None
-    email = models.EmailField(('email address'), unique=True)
+    email = models.EmailField(_('email address'), unique=True)
     first_name = models.CharField(max_length=80)
     last_name = models.CharField(max_length=80)
     bio = models.TextField()
