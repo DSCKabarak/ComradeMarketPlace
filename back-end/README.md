@@ -1,11 +1,9 @@
 # CMP Backend
-The CMP backend is built using the Django web framework. It handles all of the data storage and business logic for the Comrade Market Place.
-## Getting Started
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
+These instructions will help you set up the Comrade Marketplace Backend on your local machine for development and testing purposes.
+
 ### Prerequisites
-- `Python 3.6` and above
-- `django  4.1.1`
-- Postgresql => Version 13
+- `Python 3.10` or higher
+- PostgreSQL 13 or higher
 ### Generating a Secret Key (This is Optional)
 1. Run the following command to generate a new secret key:
 ```
@@ -25,7 +23,7 @@ git clone git@github.com:DSCKabarak/ComradeMarketPlace.git
 cd cmp-backend
 ```
 3. Create a virtual environment and activate it:
-```
+```linux
 virtualenv venv
 source venv/bin/activate
 ```
@@ -36,9 +34,9 @@ pip install -r requirements.txt
 5. Create a new file named `.env`in the project root directory to store your environment variables. In your `.env` file, you can add environment variables like this:
 ```
 SECRET_KEY= <your_secret_key>
-
-DEBUG=True
-#Database
+SETTINGS=development
+ALLOWED_HOSTS=localhost 127.0.0.1
+CORS_ALLOWED_ORIGINS=http://localhost:3000
 DB_NAME= <your_db_name>
 DB_USER= <your_db_user>
 DB_PASS= <your_db_password>
@@ -46,33 +44,35 @@ DB_HOST= <your_db_host>
 DB_PORT= <your_db_port>
 ```
 6. Run the migrations:
-```
+``` 
 python manage.py makemigrations
 python manage.py migrate
+python manage.py createsuperuser
 ```
-7. Run the development server:
+
+7. Collect the static files:
+```
+python manage.py collectstatic
+```
+
+8. Generate the API schema:
+```
+python manage.py spectacular --color --file schema.yml
+```
+
+9. Start the development server:
 ```
 python manage.py runserver
 ```
-8. The backend will be accessible at `http://localhost:8000/`.
+
+The backend will be accessible at `http://localhost:8000/`. or any other specified port and IP address.
 
 It is recommended to use a virtual environment in the development process.
 
-## API endpoints
-The following API endpoints are available for interacting with the CMP backend:
-| HTTP Verbs | Endpoints | Action |
-| --- | --- | --- |
-| POST | /comrade-market-place/api/auth/login | To login to an existing account |
-| POST | /comrade-market-place/api/auth/register | To create a new user account |
-| POST | /comrade-market-place/api/auth/logout | To logout of a logged in account |
-| GET | /comrade-market-place/api/auth/profile | To get a logged in user's profile details |
-| GET | /comrade-market-place/api/products | To get a list of all products |
-| GET | /comrade-market-place/api/products/images | To get images for a specific product |
-| POST | /comrade-market-place/api/products/images | To upload images for a specific product |
-| PUT | /comrade-market-place/api/products/images | To update an image for a specific product |
-| DELETE | /comrade-market-place/api/products/images | To delete an image for a specific product |
+## API Documentation
+After running the server, you can access the API documentation at the following URLs:
+- Swagger Documentation: `http://localhost:8000/api/schema/swagger-ui/`
+- Redoc Documentation: `http://localhost:8000/api/schema/redoc/`
 
-### Tips
-- You can add additional endpoints as required.
-- You can also include the sample request and response of each endpoint with proper format and data type
-- It will be helpful to include some extra information like request parameter, body parameters and response codes etc.
+## Contributing
+Contributions are welcome! If you find any issues or have ideas for new features, please create a new issue or submit a pull request.
