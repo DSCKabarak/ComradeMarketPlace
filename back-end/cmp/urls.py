@@ -13,14 +13,19 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from cmp_api import urls as cmp_api_urls
-
+from marketplace import urls as marketplace_urls
+from accounts import urls as accounts_urls
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api-auth/', include('rest_framework.urls')),
-    path('comrade-market-place/', include(cmp_api_urls)),
+    path("admin/", admin.site.urls),
+    path("api/marketplace/", include(marketplace_urls)),
+    path("api/accounts/", include(accounts_urls)),
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("api/schema/swagger-ui/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+    path("api/schema/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
