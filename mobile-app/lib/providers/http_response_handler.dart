@@ -71,7 +71,5 @@ void httpResponseHander({
       );
       onFailiure();
       break;
-
-
   }
 }

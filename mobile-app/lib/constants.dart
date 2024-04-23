@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 const String cmpAPIUrl = 'http://localhost:8000/api/';
 
-
 const primaryColor = Color(0xFF4A794C);
 const secondaryColor = Color(0xFFE0E0E0);
 const backgroundColor = Color(0xFFF5F5F5);
@@ -15,7 +14,6 @@ const iconColorDark = Color(0xFF101010);
 const errorColor = Color(0xFFD32F2F);
 const successColor = Color(0xFF388E3C);
 
-
 class AppVersionUtil {
   static const String appVersion = '1.0.0';
   static String buildNumber = '1';
@@ -24,7 +22,6 @@ class AppVersionUtil {
 
   static String getAppVersion() {
     return appVersion;
-  
   }
 
   static String getBuildNumber() {

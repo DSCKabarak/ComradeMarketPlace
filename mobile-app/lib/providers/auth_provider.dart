@@ -7,8 +7,6 @@ import 'package:cmp/providers/connection_provider.dart';
 import 'package:cmp/providers/http_response_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
-
 class AuthProvider with ChangeNotifier {
   UserModel _user = UserModel(
     email: '',
@@ -23,15 +21,13 @@ class AuthProvider with ChangeNotifier {
       _user = _user.copyWith(accessToken: accessToken);
     }
     notifyListeners();
-
   }
 
-  void setUser (UserModel userModel) {
+  void setUser(UserModel userModel) {
     _user = userModel;
     notifyListeners();
   }
 
-  
   void clearUser() {
     _user = UserModel(
       email: '',
@@ -40,7 +36,6 @@ class AuthProvider with ChangeNotifier {
     );
     notifyListeners();
   }
-
 
   Future<void> login({
     required BuildContext context,
@@ -53,14 +48,12 @@ class AuthProvider with ChangeNotifier {
 
     final http.Response repsonse = await http.post(
       Uri.parse(
-        '${cmpAPIUrl}api/accounts/login/',),
-        body: {
-          'email': email,
-          'password': password,
-        },
-      
+        '${cmpAPIUrl}api/accounts/login/',
+      ),
+      body: {
+        'email': email,
+        'password': password,
+      },
     );
-
-
   }
 }
