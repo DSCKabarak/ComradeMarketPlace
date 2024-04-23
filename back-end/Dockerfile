@@ -42,6 +42,12 @@ RUN adduser -D user
 # Change ownership of the /app directories
 RUN chown -R user:user /app
 
+RUN mkdir -p /app/marketplace/migrations/
+RUN touch /app/marketplace/migrations/__init__.py
+
+RUN mkdir -p /app/accounts/migrations/
+RUN touch /app/accounts/migrations/__init__.py
+
 # Set permissions for migration files
 RUN chmod -R 755 /app/*/migrations/
 
@@ -50,6 +56,6 @@ RUN chown -R user:user /app
 USER root
 
 # Set the entrypoint script
-CMD ["entrypoint.sh"]
+CMD ["./scripts/entrypoint.sh"]
 
 USER user

@@ -2,18 +2,20 @@ version: "3.7"
 
 services:
   app:
+    container_name: cmp_backend
+    image: cmp_backend
     build:
       context: .
       dockerfile: ./Dockerfile
-    command: gunicorn cmp.wsgi:application --bind 0.0.0.0:8000 --workers 4 --threads 4
-    expose:
-      - 8000
+    ports:
+      - "8000:8000"
     env_file:
       - ./.env.prod
     depends_on:
       - db
 
   db:
+    container_name: cmp_db
     image: postgres:latest
     ports:
       - "5432:5432"
@@ -21,7 +23,7 @@ services:
       - ./.env.prod.db
 
   pgadmin:
-    container_name: pgadmin
+    container_name: cmp_pgadmin
     image: dpage/pgadmin4
     environment:
       - PGADMIN_DEFAULT_EMAIL=pgadmin4@pgadmin.org
