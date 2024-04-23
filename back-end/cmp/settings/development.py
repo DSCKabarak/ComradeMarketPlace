@@ -1,3 +1,4 @@
+import os
 from .base import *
 
 DEBUG = True
@@ -5,10 +6,10 @@ DEBUG = True
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": cmp_db_name,
-        "USER": cmp_db_user,
-        "PASSWORD": cmp_db_password,
-        "HOST": cmp_db_host,
-        "PORT": cmp_db_port,
+        "NAME": os.environ.get("CMP_DB_NAME"),
+        "USER": os.environ.get("CMP_DB_USER"),
+        "PASSWORD": os.environ.get("CMP_DB_PASSWORD"),
+        "HOST": os.environ.get("CMP_DB_HOST"),
+        "PORT": os.environ.get("CMP_DB_PORT"),
     }
 }
