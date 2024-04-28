@@ -51,7 +51,7 @@ class CustomUser(AbstractUser):
     first_name = models.CharField(max_length=80)
     last_name = models.CharField(max_length=80)
     bio = models.TextField()
-    is_verified = models.BooleanField(default=True)
+    is_verified = models.BooleanField(default=False)
     phone_number = models.CharField(max_length=10, default="07XXXXXXXX")
     user_type = models.CharField(max_length=90, choices=TYPE_CHOICES)
     avatar = models.FileField(upload_to="user/uploads/avatar/", null=True)
@@ -75,9 +75,7 @@ class CustomUser(AbstractUser):
 
 class EmailVerificationToken(models.Model):
     user = models.ForeignKey(
-        CustomUser,
-        verbose_name=("user"),
-        on_delete=models.DO_NOTHING
+        CustomUser, verbose_name=("user"), on_delete=models.DO_NOTHING
     )
     token = models.CharField(("token"), max_length=25)
     created_at = models.DateTimeField(("created at"), auto_now_add=True)
@@ -90,7 +88,9 @@ class EmailVerificationToken(models.Model):
 
 
 class PasswordResetToken(models.Model):
-    user = models.ForeignKey(CustomUser, verbose_name="user", on_delete=models.DO_NOTHING)
+    user = models.ForeignKey(
+        CustomUser, verbose_name="user", on_delete=models.DO_NOTHING
+    )
     token = models.CharField(("token"), max_length=25)
     created_at = models.DateTimeField("created at", auto_now_add=True)
 

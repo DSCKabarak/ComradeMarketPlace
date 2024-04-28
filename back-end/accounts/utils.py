@@ -4,7 +4,7 @@ from django.db.models import Model
 
 
 def token_generator_and_check_if_exists(
-    model: Model, field_name: str, length: int = 25
+    model: Model, length: int = 25
 ):
     """
     Generates a unique, secure token of the specified length.
@@ -21,6 +21,6 @@ def token_generator_and_check_if_exists(
     characters = string.ascii_letters + string.digits
     token = "".join(secrets.choice(characters) for i in range(length))
 
-    while model.objects.filter(field_name=token).exists():
+    while model.objects.filter(token=token).exists():
         token = "".join(secrets.choice(characters) for i in range(length))
     return token

@@ -94,6 +94,8 @@ class PasswordResetSerializer(serializers.Serializer):
 class RefreshTokenRequestSerializer(serializers.Serializer):
     refresh = serializers.CharField(required=True)
 
+
+
 class ChangePasswordSerializer(serializers.Serializer):
     current_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
@@ -127,14 +129,23 @@ class AccountProfileSerializer(serializers.ModelSerializer):
             "user_type",
             "avatar",
         ]
+        def update(self, instance, validated_data):
+            instance.first_name = validated_data.get("first_name", instance.first_name)
+            instance.last_name = validated_data.get("last_name", instance.last_name)
+            instance.bio = validated_data.get("bio", instance.bio)
+            instance.phone_number = validated_data.get("phone_number", instance.phone_number)
+            instance.user_type = validated_data.get("user_type", instance.user_type)
+            instance.avatar = validated_data.get("avatar", instance.avatar)
+            instance.save()
+            return instance
+
 
 class ErrorSerializer(serializers.Serializer):
     error_code = serializers.CharField(required=False)
     error_message = serializers.CharField()
-    details = serializers.ListField(
-        child=serializers.DictField(),
-        required=False
-    )
+    details = serializers.ListField(child=serializers.DictField(), required=False)
+
+
 class SuccessSerializer(serializers.Serializer):
     message = serializers.CharField()
     data = serializers.DictField(required=False)
