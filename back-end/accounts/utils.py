@@ -3,9 +3,7 @@ import secrets
 from django.db.models import Model
 
 
-def token_generator_and_check_if_exists(
-    model: Model, length: int = 25
-):
+def token_generator_and_check_if_exists(model: Model, length: int = 25):
     """
     Generates a unique, secure token of the specified length.
 
