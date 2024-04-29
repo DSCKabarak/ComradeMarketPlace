@@ -94,12 +94,11 @@ class AuthViewSet(viewsets.GenericViewSet):
             )
 
         user = serializer.validated_data
-        refresh = RefreshToken.for_user(user) 
+        refresh = RefreshToken.for_user(user)
         return self.handle_success_response(
             "Login successful.",
             {"refresh": str(refresh), "access": str(refresh.access_token)},
         )
-
 
     @extend_schema(
         operation_id="register",
@@ -509,7 +508,7 @@ class AuthViewSet(viewsets.GenericViewSet):
         error_data = {
             "error_code": error_code,
             "error_message": error_message,
-            "details": [str(details) or ""]
+            "details": [str(details) or ""],
         }
         error_serializer = ErrorSerializer(data=error_data)
         error_serializer.is_valid(raise_exception=True)
