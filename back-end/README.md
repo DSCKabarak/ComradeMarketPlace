@@ -4,6 +4,8 @@ These instructions will help you set up the Comrade Marketplace Backend on your 
 ### Prerequisites
 - `Python 3.10` or higher
 - `PostgreSQL` 13 or higher
+- `RabbitMQ` 3.10 or higher
+
 ### Generating a Secret Key (This is Optional)
 1. Run the following command to generate a new secret key:
 ```
@@ -63,6 +65,21 @@ python -c "from django.core.management.utils import get_random_secret_key; print
 9. Start the development server:
     ```
     python manage.py runserver
+    ```
+10. Start RabbitMQ server:
+- Open a new terminal tab and enter the following commands:
+    - **Linux** 
+    ```
+    sudo systemctl start rabbitmq-server
+    ```
+    - **Windows**
+    ```
+    rabbitmq-server start
+    ```
+11. Start the celery worker:
+ - Open a new terminal window and enter the following command:
+    ```
+    celery -A ComradeMarketPlace worker -l info
     ```
 
 The backend will be accessible at `http://localhost:8000/`. or any other specified port and IP address.
