@@ -120,7 +120,21 @@ class Bookmark(models.Model):
 
 class Notification(models.Model):
     """
-    Notification model to store notifications for users. Has fields for type, recipients, content, sent_at, and read.
+    The Notification model represents a notification that can be sent to a user.
+
+    Attributes:
+        notification_type (str): The type of the notification. Choices are defined in TYPE_CHOICES.
+        recipient (CustomUser): The user who will receive the notification.
+        subject (str): The subject of the notification.
+        content (str): The content of the notification.
+        is_read (bool): A flag indicating whether the notification has been read by the recipient.
+        is_sent (bool): A flag indicating whether the notification has been sent to the recipient.
+        sent_at (datetime): The time when the notification was sent.
+
+    Managers:
+        objects (Manager): The default manager that includes all notifications.
+        emailed (SentManager): A custom manager that includes only the notifications that have been sent.
+        not_emailed (NotSentManager): A custom manager that includes only the notifications that have not been sent.
     """
 
     class SentManager(models.Manager):
