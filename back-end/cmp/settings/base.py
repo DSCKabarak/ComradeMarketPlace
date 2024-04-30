@@ -74,6 +74,7 @@ DJANGO_APPS = [
 LOCAL_APPS = [
     "accounts",
     "marketplace",
+    "notifications",
 ]
 
 THIRD_PARTY_APPS = [

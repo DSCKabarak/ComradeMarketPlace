@@ -1,10 +1,8 @@
-from django.core.mail import EmailMessage
 from django.conf import settings
-from marketplace.tasks import (
+from notifications.tasks import (
     send_single_email_notification,
     send_mass_email_notification,
 )
-from marketplace.models import CustomUser
 
 
 def send_single_notification(
