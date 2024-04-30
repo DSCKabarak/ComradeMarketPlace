@@ -11,7 +11,8 @@ class Notification(models.Model):
         notification_type (str): The type of the notification. Choices are defined in TYPE_CHOICES.
         recipient (CustomUser): The user who will receive the notification.
         subject (str): The subject of the notification.
-        content (str): The content of the notification.
+        content (str): The email content of the notification.
+        description: The description of the notification that will be displayed to the user.
         is_read (bool): A flag indicating whether the notification has been read by the recipient.
         is_sent (bool): A flag indicating whether the notification has been sent to the recipient.
         sent_at (datetime): The time when the notification was sent.
@@ -47,6 +48,7 @@ class Notification(models.Model):
     recipient = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
     subject = models.TextField()
     content = models.TextField()
+    description = models.TextField()
     is_read = models.BooleanField(default=False)
     is_sent = models.BooleanField(default=False)
     sent_at = models.DateTimeField(auto_now_add=True)

@@ -10,6 +10,7 @@ def send_single_email_notification(
     subject: str,
     recipient: str,
     content,
+    description: str,
     notification_type: str,
     template: str = None,
     sender: str = None,
@@ -34,6 +35,7 @@ def send_single_email_notification(
             notification_type=notification_type,
             recipient=user,
             subject=subject,
+            description=description,
             content=message,
         )
     except Exception as e:
@@ -68,7 +70,7 @@ def send_mass_email_notification(
     try:
         with get_connection() as email_connection:
             for datatuple in data:
-                subject, recipient, content = datatuple
+                subject, recipient, content, description = datatuple
 
                 try:
                     user = CustomUser.objects.get(email=recipient)
@@ -95,6 +97,7 @@ def send_mass_email_notification(
                         recipient=user,
                         subject=subject,
                         content=message,
+                        description=description,
                     )
                 except Exception as e:
                     successful = False

@@ -10,6 +10,7 @@ def send_single_notification(
     recipient: str,
     content,
     notification_type: str,
+    description: str,
     template: str = None,
     sender: str = None,
 ):
@@ -29,7 +30,7 @@ def send_single_notification(
     """
 
     send_single_email_notification.delay(
-        subject, recipient, content, notification_type, template, sender
+        subject, recipient, content, description, notification_type, template, sender
     )
 
     return True
@@ -49,6 +50,7 @@ def send_mass_notification(
              - subject (str): The subject of the email.
              - recipient (str): The email address of the recipient.
              - content: The content of the email. if you are using a custom template, content should be a dictionary. Otherwise it should be the string to be sent.
+             - description (str): The description of the notification that will be displayed to the user.
         notification_type (str): The type of the notification.
         template (str, optional): The template to use for the emails. Defaults to None.
         sender (str, optional): The sender's email address. Defaults to settings.DEFAULT_FROM_EMAIL.
