@@ -1,7 +1,13 @@
-from django.db import models
-from autoslug import AutoSlugField
+import json
 import uuid
+
+from autoslug import AutoSlugField
+from django.db import models
+
 from accounts.models import CustomUser
+from notifications.notify import send_new_category_notification
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class Category(models.Model):
@@ -13,11 +19,20 @@ class Category(models.Model):
         category = f"{self.category_name}, {self.sub_category}"
         return category
 
+    def get_category_name(self):
+        return f"{self.category_name}, {self.sub_category}"
+
     class Meta:
         db_table = "categories"
 
     def get_absolute_url(self):
         return self.name
+
+
+@receiver(post_save, sender=Category)
+def create_category(sender, instance, created, **kwargs):
+    if created:
+        send_new_category_notification(instance)
 
 
 class Product(models.Model):

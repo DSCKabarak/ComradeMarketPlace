@@ -8,3 +8,4 @@ migrations/
 */migrations/
 staticfiles/
 schema.yml
+*.log

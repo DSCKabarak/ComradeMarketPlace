@@ -4,6 +4,8 @@ These instructions will help you set up the Comrade Marketplace Backend on your 
 ### Prerequisites
 - `Python 3.10` or higher
 - `PostgreSQL` 13 or higher
+- `RabbitMQ` 3.10 or higher
+
 ### Generating a Secret Key (This is Optional)
 1. Run the following command to generate a new secret key:
 ```
@@ -42,7 +44,24 @@ python -c "from django.core.management.utils import get_random_secret_key; print
     DB_PASS= <your_db_password>
     DB_HOST= <your_db_host>
     DB_PORT= <your_db_port>
+    
+    # Email Configuration
+    EMAIL_HOST_USER=<your_email@gmail.com>
+    EMAIL_HOST_PASSWORD=<your_email_password>
+    EMAIL_PORT=<smtp_port>
+    EMAIL_USE_TLS=True
+    DEFAULT_FROM_EMAIL=<your_default_from_email@gmail.com>
+    EMAIL_HOST=<smtp.gmail.com>
+
+    # Celery Configuration
+    CELERY_BROKER_URL=pyamqp://guest@localhost//
+    CELERY_RESULT_BACKEND=rpc://
+    CELERY_RESULT_PERSISTENT=True
+    CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP=True
     ```
+
+    #### If using google mail, you need to create an app password for the EMAIL_HOST_PASSWORD. You can follow the instructions [here](https://support.google.com/accounts/answer/185833?hl=en).
+
 6. Run the migrations:
     ``` 
     python manage.py makemigrations
@@ -63,6 +82,21 @@ python -c "from django.core.management.utils import get_random_secret_key; print
 9. Start the development server:
     ```
     python manage.py runserver
+    ```
+10. Start RabbitMQ server:
+- Open a new terminal tab and enter the following commands:
+    - **Linux** 
+    ```
+    sudo systemctl start rabbitmq-server
+    ```
+    - **Windows**
+    ```
+    rabbitmq-server start
+    ```
+11. Start the celery worker:
+ - Open a new terminal window and enter the following command:
+    ```
+    celery -A cmp worker -l info
     ```
 
 The backend will be accessible at `http://localhost:8000/`. or any other specified port and IP address.

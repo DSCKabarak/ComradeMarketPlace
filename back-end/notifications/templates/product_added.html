@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product added template</title>
+</head>
+
+<body>
+    <h1>Product added</h1>
+    <p>A new product has been added to the marketplace.</p>
+    <p>Product name: {{ product_name }}</p>
+    <p>Price: {{ product_price }}</p>
+    <p>Category: {{ product_category }}</p>
+    <p>Key Features: {{ product_key_features }}</p>
+    <p>Product Description: {{ product_description }}</p>
+
+    <div>
+        <img src="{{ product_image }}" alt="product image">
+    </div>
+</body>
+
+</html>

@@ -74,6 +74,7 @@ DJANGO_APPS = [
 LOCAL_APPS = [
     "accounts",
     "marketplace",
+    "notifications",
 ]
 
 THIRD_PARTY_APPS = [
@@ -188,6 +189,14 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS")
 EMAIL_PORT = os.environ.get("EMAIL_PORT")
 
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_PERSISTENT = os.getenv("CELERY_RESULT_PERSISTENT")
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = os.getenv(
+    "CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP"
+)
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
@@ -226,3 +235,18 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "static/media")
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# email settings
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT"))
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS").lower() == "true"
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL")
+
+RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
+BROKER_URL = os.getenv("CELERY_BROKER_URL")
+CELERY_RESULT_PERSISTENT = os.getenv("CELERY_RESULT_PERSISTENT") == "True"
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = (
+    os.getenv("CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP") == "True"
+)
