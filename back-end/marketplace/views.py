@@ -69,9 +69,6 @@ class ProductViewSet(viewsets.ModelViewSet):
                         f"A new product {product.product_name} has been added to the marketplace.",
                     )
                 )
-
-                print(email_data)
-
             try:
                 send_mass_notification(
                     data=email_data,
@@ -80,7 +77,7 @@ class ProductViewSet(viewsets.ModelViewSet):
                 )
                 print("Emails sent successfully.")
             except Exception as e:
-                print(f"An error occurred while sending notifications: {str(e)}")
+                raise Exception(f"An error occurred while sending notifications: {str(e)}")
             try:
                 send_single_notification(
                 subject=f"Hello, {product.merchant.get_full_name()}, your product has been added to the marketplace.",
@@ -91,7 +88,7 @@ class ProductViewSet(viewsets.ModelViewSet):
             )
                 print("Email sent successfully.")
             except Exception as e:
-                print(f"An error occurred while sending notifications: {str(e)}")
+                raise Exception(f"An error occurred while sending notifications: {str(e)}")
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
