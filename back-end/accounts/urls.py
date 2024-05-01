@@ -1,23 +1,41 @@
-from django.urls import path, include
-from rest_framework import routers
+from django.urls import path
 from .views import AuthViewSet
 
-router = routers.DefaultRouter(trailing_slash=False)
-router.register("", AuthViewSet, basename="auth")
-
 urlpatterns = [
-    path("login/", AuthViewSet.as_view({"post": "login"}), name="login"),
-    path("logout/", AuthViewSet.as_view({"post": "logout"}), name="logout"),
-    path("register/", AuthViewSet.as_view({"post": "register"}), name="register"),
+    path("login", AuthViewSet.as_view({"post": "login"}), name="login"),
+    path("logout", AuthViewSet.as_view({"get": "logout"}), name="logout"),
+    path("register", AuthViewSet.as_view({"post": "register"}), name="register"),
     path(
-        "password-change/",
-        AuthViewSet.as_view({"post": "password_change"}),
-        name="password-change",
+        "verify_email",
+        AuthViewSet.as_view({"get": "verify_email"}),
+        name="verify-email",
     ),
     path(
-        "profile/",
-        AuthViewSet.as_view({"get": "profile", "put": "profile"}),
-        name="profile",
+        "reset_password",
+        AuthViewSet.as_view({"post": "reset_password"}),
+        name="reset-password",
     ),
-    path("", include(router.urls)),
+    path(
+        "send_password_reset_token",
+        AuthViewSet.as_view({"post": "send_password_reset_token"}),
+        name="send-password-reset-token",
+    ),
+    path(
+        "change_password",
+        AuthViewSet.as_view({"post": "change_password"}),
+        name="change-password",
+    ),
+    path(
+        "get_profile", AuthViewSet.as_view({"get": "get_profile"}), name="get-profile"
+    ),
+    path(
+        "update_profile",
+        AuthViewSet.as_view({"put": "update_profile"}),
+        name="update-profile",
+    ),
+    path(
+        "refresh_token",
+        AuthViewSet.as_view({"post": "refresh_token"}),
+        name="refresh-token",
+    ),
 ]
