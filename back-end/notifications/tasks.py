@@ -2,8 +2,6 @@ from celery import shared_task
 from django.core.mail import EmailMessage, get_connection
 from notifications.models import Notification
 from django.template.loader import get_template
-from marketplace.models import CustomUser
-
 
 @shared_task
 def send_single_email_notification(
@@ -15,7 +13,7 @@ def send_single_email_notification(
     template: str = None,
     sender: str = None,
 ):
-    from marketplace.models import CustomUser
+    from accounts.models import CustomUser
 
     try:
         if template:
@@ -67,7 +65,7 @@ def send_single_email_notification(
 def send_mass_email_notification(
     data: list, notification_type: str, template: str = None, sender: str = None
 ):
-    from marketplace.models import CustomUser
+    from accounts.models import CustomUser
 
     successful = True
 
