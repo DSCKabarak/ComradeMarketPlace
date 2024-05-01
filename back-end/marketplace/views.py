@@ -16,6 +16,8 @@ from .models import (
     Comment,
     Bookmark,
 )
+from notifications.notify import send_mass_notification, send_single_notification
+from accounts.models import CustomUser
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -43,8 +45,56 @@ class ProductViewSet(viewsets.ModelViewSet):
     def create_product(self, request):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            serializer.save()
+            product = serializer.save()
+
+            email_data = list()
+            print(product)
+            buyers = CustomUser.objects.filter(user_type="buyer")
+
+            print(buyers)
+
+            for buyer in buyers:
+                email_data.append(
+                    (
+                        f"Hello, {buyer.email}, a new product has been added to the marketplace.",
+                        buyer.email,
+                        {
+                            "product_name": product.product_name,
+                            "product_description": product.description,
+                            "product_price": product.price,
+                            # "product_image": product.productimage_set.first().image.url,
+                            "product_category": product.category.get_category_name(),
+                            "product_key_features": product.key_features,
+                        },
+                        f"A new product {product.product_name} has been added to the marketplace.",
+                    )
+                )
+
+                print(email_data)
+
+            try:
+                send_mass_notification(
+                    data=email_data,
+                    notification_type="product_added",
+                    template="product_added.html",
+                )
+                print("Emails sent successfully.")
+            except Exception as e:
+                print(f"An error occurred while sending notifications: {str(e)}")
+            try:
+                send_single_notification(
+                subject=f"Hello, {product.merchant.get_full_name()}, your product has been added to the marketplace.",
+                recipient=product.merchant.email,
+                content=f"Your product {product.product_name} has been added to the marketplace.",
+                description=f"Your product {product.product_name} has been added to the marketplace.",
+                notification_type="product_added",
+            )
+                print("Email sent successfully.")
+            except Exception as e:
+                print(f"An error occurred while sending notifications: {str(e)}")
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(

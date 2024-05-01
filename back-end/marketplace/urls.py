@@ -10,7 +10,6 @@ from .views import (
 
 router = routers.DefaultRouter(trailing_slash=False)
 
-router.register("products", ProductViewSet, basename="products")
 router.register("comments", CommentViewSet, basename="comments")
 router.register("product-images", ProductImageViewSet, basename="product-images")
 router.register("categories", CategoryViewSet, basename="categories")
