@@ -40,10 +40,12 @@ RUN chmod +x /scripts/*
 RUN adduser -D user
 
 # Change ownership of the /app directories
-RUN chown -R user:user /app
 
 RUN mkdir -p /app/marketplace/migrations/
 RUN touch /app/marketplace/migrations/__init__.py
+
+RUN mkdir -p /app/notifications/migrations/
+RUN touch /app/notifications/migrations/__init__.py
 
 RUN mkdir -p /app/accounts/migrations/
 RUN touch /app/accounts/migrations/__init__.py

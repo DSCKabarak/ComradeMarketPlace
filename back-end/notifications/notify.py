@@ -5,6 +5,7 @@ from notifications.tasks import (
 )
 from accounts.models import CustomUser
 
+
 def send_single_notification(
     subject: str,
     recipient: str,
@@ -30,11 +31,16 @@ def send_single_notification(
     """
     try:
         send_single_email_notification.delay(
-        subject, recipient, content, description, notification_type, template, sender
-    )
+            subject,
+            recipient,
+            content,
+            description,
+            notification_type,
+            template,
+            sender,
+        )
     except Exception as e:
         raise Exception(f"Error sending single notification: {e}")
-
 
 
 def send_mass_notification(

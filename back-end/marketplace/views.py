@@ -1,4 +1,6 @@
 from rest_framework.response import Response
+from notifications.notify import send_single_notification
+
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework import permissions
@@ -49,7 +51,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
             email_data = list()
             buyers = CustomUser.objects.filter(user_type="buyer")
-            
+
             for buyer in buyers:
                 email_data.append(
                     (
@@ -74,18 +76,22 @@ class ProductViewSet(viewsets.ModelViewSet):
                 )
                 print("Emails sent successfully.")
             except Exception as e:
-                raise Exception(f"An error occurred while sending notifications: {str(e)}")
+                raise Exception(
+                    f"An error occurred while sending notifications: {str(e)}"
+                )
             try:
                 send_single_notification(
-                subject=f"Hello, {product.merchant.get_full_name()}, your product has been added to the marketplace.",
-                recipient=product.merchant.email,
-                content=f"Your product {product.product_name} has been added to the marketplace.",
-                description=f"Your product {product.product_name} has been added to the marketplace.",
-                notification_type="product_added",
-            )
+                    subject=f"Hello, {product.merchant.get_full_name()}, your product has been added to the marketplace.",
+                    recipient=product.merchant.email,
+                    content=f"Your product {product.product_name} has been added to the marketplace.",
+                    description=f"Your product {product.product_name} has been added to the marketplace.",
+                    notification_type="product_added",
+                )
                 print("Email sent successfully.")
             except Exception as e:
-                raise Exception(f"An error occurred while sending notifications: {str(e)}")
+                raise Exception(
+                    f"An error occurred while sending notifications: {str(e)}"
+                )
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -238,7 +244,19 @@ class CategoryViewSet(viewsets.ModelViewSet):
     def create_category(self, request):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            serializer.save()
+            category = serializer.save()
+            send_single_notification(
+                subject="New Product Added",
+                recipient="michaelwekesa@kabarak.ac.ke",
+                content={
+                    "product_name": category.category_name,
+                    "product_description": category.sub_category,
+                    # Add more relevant product details
+                },
+                notification_type="product_added",
+                description="A new product has been added.",
+                sender="wekesa360@outlook.com",
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

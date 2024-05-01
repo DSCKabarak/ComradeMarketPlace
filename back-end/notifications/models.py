@@ -64,6 +64,7 @@ class Notification(models.Model):
         return f"{self.notification_type} notification for {self.recipient.email}"
 
     class Meta:
+        db_table = "notifications"
         verbose_name = "Notification"
         verbose_name_plural = "Notifications"
         default_manager_name = "objects"

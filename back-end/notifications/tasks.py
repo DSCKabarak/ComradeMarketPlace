@@ -3,6 +3,7 @@ from django.core.mail import EmailMessage, get_connection
 from notifications.models import Notification
 from django.template.loader import get_template
 
+
 @shared_task
 def send_single_email_notification(
     subject: str,
