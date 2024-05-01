@@ -52,9 +52,15 @@ python -c "from django.core.management.utils import get_random_secret_key; print
     EMAIL_USE_TLS=True
     DEFAULT_FROM_EMAIL=<your_default_from_email@gmail.com>
     EMAIL_HOST=<smtp.gmail.com>
+
+    # Celery Configuration
+    CELERY_BROKER_URL=pyamqp://guest@localhost//
+    CELERY_RESULT_BACKEND=rpc://
+    CELERY_RESULT_PERSISTENT=True
+    CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP=True
     ```
 
-    ##### If using google mail, you need to create an app password for the EMAIL_HOST_PASSWORD. You can follow the instructions [here](https://support.google.com/accounts/answer/185833?hl=en).
+    #### If using google mail, you need to create an app password for the EMAIL_HOST_PASSWORD. You can follow the instructions [here](https://support.google.com/accounts/answer/185833?hl=en).
 
 6. Run the migrations:
     ``` 
@@ -90,7 +96,7 @@ python -c "from django.core.management.utils import get_random_secret_key; print
 11. Start the celery worker:
  - Open a new terminal window and enter the following command:
     ```
-    celery -A ComradeMarketPlace worker -l info
+    celery -A cmp worker -l info
     ```
 
 The backend will be accessible at `http://localhost:8000/`. or any other specified port and IP address.
