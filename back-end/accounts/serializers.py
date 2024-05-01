@@ -8,10 +8,6 @@ from .models import EmailVerificationToken
 User = get_user_model()
 
 
-class EmptySerializer(serializers.Serializer):
-    pass
-
-
 class AuthUserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=255, min_length=3)
     password = serializers.CharField(max_length=128, write_only=True)
@@ -45,6 +41,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
+            "id",
             "email",
             "first_name",
             "last_name",

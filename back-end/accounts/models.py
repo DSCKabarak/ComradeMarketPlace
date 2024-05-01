@@ -59,7 +59,7 @@ class CustomUser(AbstractUser):
     updated_at = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ["phone_number", "user_type"]
 
     objects = UserManager()
 
@@ -70,6 +70,7 @@ class CustomUser(AbstractUser):
         return self.avatar.url
 
     class Meta:
+        unique_together = ("email", "phone_number", "user_type")
         db_table = "users"
 
 

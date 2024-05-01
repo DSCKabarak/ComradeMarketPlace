@@ -16,9 +16,11 @@ from drf_spectacular.utils import (
     OpenApiTypes,
     OpenApiResponse,
 )
+from django.contrib.auth.signals import user_logged_in, user_logged_out
+from django.dispatch import receiver
+from rest_framework_simplejwt.tokens import OutstandingToken, BlacklistedToken
 from .models import EmailVerificationToken, PasswordResetToken
 from .serializers import (
-    EmptySerializer,
     AuthUserSerializer,
     UserRegisterSerializer,
     PasswordResetSerializer,
@@ -36,7 +38,6 @@ User = get_user_model()
 
 
 class AuthViewSet(viewsets.GenericViewSet):
-    serializer_class = EmptySerializer
     serializer_classes = {
         "login": AuthUserSerializer,
         "register": UserRegisterSerializer,
@@ -47,7 +48,6 @@ class AuthViewSet(viewsets.GenericViewSet):
         "get_profile": AccountProfileSerializer,
         "update_profile": AccountProfileSerializer,
         "refresh_token": RefreshTokenRequestSerializer,
-        "logout": EmptySerializer,
     }
 
     def get_permissions(self):
@@ -77,9 +77,19 @@ class AuthViewSet(viewsets.GenericViewSet):
     )
     @action(methods=["POST"], detail=False)
     def login(self, request):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer_class()
+        serializer = serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
+            user = serializer.validated_data
+            refresh = RefreshToken.for_user(user)
+            if not user.is_verified:
+                return self.handle_exception_response(
+                    "NOT_VERIFIED",
+                    "User's email is not verified.",
+                    status_response=status.HTTP_400_BAD_REQUEST,
+                )
+
         except ValidationError as e:
             return self.handle_exception_response(
                 "VALIDATION_ERROR", "Validation Failed", e, status.HTTP_400_BAD_REQUEST
@@ -93,8 +103,6 @@ class AuthViewSet(viewsets.GenericViewSet):
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        user = serializer.validated_data
-        refresh = RefreshToken.for_user(user)
         return self.handle_success_response(
             "Login successful.",
             {"refresh": str(refresh), "access": str(refresh.access_token)},
@@ -117,7 +125,8 @@ class AuthViewSet(viewsets.GenericViewSet):
         detail=False,
     )
     def register(self, request):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer_class()
+        serializer = serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
             user = serializer.save()
@@ -170,7 +179,8 @@ class AuthViewSet(viewsets.GenericViewSet):
     @action(methods=["GET"], detail=False)
     def verify_email(self, request):
         token = request.query_params.get("token")
-        serializer = self.get_serializer_class(data={"token": token})
+        serializer = self.get_serializer_class()
+        serializer = serializer(data={"token": token})
         serializer.is_valid(raise_exception=True)
 
         try:
@@ -224,7 +234,8 @@ class AuthViewSet(viewsets.GenericViewSet):
     def get_profile(self, request):
         try:
             profile = User.objects.get(email=request.user.email)
-            serializer = self.get_serializer(profile)
+            serializer = self.get_serializer_class()
+            serializer = serializer(profile)
             return self.handle_success_response(
                 "User profile retrieved successfully.", serializer.data
             )
@@ -255,7 +266,8 @@ class AuthViewSet(viewsets.GenericViewSet):
     def update_profile(self, request):
         try:
             profile = User.objects.get(email=request.user.email)
-            serializer = self.get_serializer(profile, data=request.data, partial=True)
+            serializer = self.get_serializer_class()
+            serializer = serializer(profile, data=request.data, partial=True)
             if serializer.is_valid(raise_exception=True):
                 serializer.update(profile, request.data)
             else:
@@ -290,7 +302,8 @@ class AuthViewSet(viewsets.GenericViewSet):
     )
     @action(methods=["POST"], detail=False)
     def change_password(self, request):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer_class()
+        serializer = serializer(data=request.data)
         user = request.user
         try:
             serializer.is_valid(raise_exception=True)
@@ -364,6 +377,7 @@ class AuthViewSet(viewsets.GenericViewSet):
 
     @extend_schema(
         operation_id="send_user_password_reset_token",
+        request=None,
         parameters=[
             OpenApiParameter(
                 name="email",
@@ -379,7 +393,8 @@ class AuthViewSet(viewsets.GenericViewSet):
     @action(methods=["GET"], detail=False)
     def send_password_reset_token(self, request):
         email = request.query_params.get("email")
-        serializer = self.get_serializer(data={"email": email})
+        serializer = self.get_serializer_class()
+        serializer = serializer(data={"email": email})
         serializer.is_valid(raise_exception=True)
 
         email = serializer.validated_data["email"]
@@ -416,9 +431,8 @@ class AuthViewSet(viewsets.GenericViewSet):
         detail=False,
     )
     def reset_password(self, request):
-        serializer = self.get_serializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.get_serializer_class()
+        serializer = serializer(data=request.data, context={"request": request})
         try:
             serializer.is_valid(raise_exception=True)
         except ValidationError as e:
@@ -481,7 +495,6 @@ class AuthViewSet(viewsets.GenericViewSet):
     @action(methods=["POST"], detail=False)
     def refresh_token(self, request):
         serializer = self.get_serializer_class()
-        print(request.data)
         serializer = serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
@@ -523,7 +536,6 @@ class AuthViewSet(viewsets.GenericViewSet):
     def get_serializer_class(self):
         if not isinstance(self.serializer_classes, dict):
             raise ImproperlyConfigured("serializer_classes should be a dict mapping.")
-
         if self.action in self.serializer_classes.keys():
             return self.serializer_classes[self.action]
         return super().get_serializer_class()
