@@ -48,11 +48,8 @@ class ProductViewSet(viewsets.ModelViewSet):
             product = serializer.save()
 
             email_data = list()
-            print(product)
             buyers = CustomUser.objects.filter(user_type="buyer")
-
-            print(buyers)
-
+            
             for buyer in buyers:
                 email_data.append(
                     (

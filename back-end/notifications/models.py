@@ -32,6 +32,8 @@ class Notification(models.Model):
             return super().get_queryset().filter(is_sent=False)
 
     TYPE_CHOICES = [
+        ("category_added", "Category Added"),
+        ("category_updated", "Category Updated"),
         ("product_added", "Product Added"),
         ("product_sold_out", "Product Sold Out"),
         ("product_back_in_stock", "Product Back in Stock"),
@@ -40,6 +42,7 @@ class Notification(models.Model):
         ("purchase_pending", "Purchase Pending"),
         ("purchase_completed", "Purchase Completed"),
         ("purchase_cancelled", "Purchase Cancelled"),
+        ("purchase_refunded", "Purchase Refunded"),
     ]
 
     notification_type = models.CharField(
