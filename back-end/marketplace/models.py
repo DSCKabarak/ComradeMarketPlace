@@ -15,6 +15,10 @@ class Category(models.Model):
     def __str__(self):
         category = f"{self.category_name}, {self.sub_category}"
         return category
+    
+    def get_category_name(self):
+        return f"{self.category_name}, {self.sub_category}"
+
 
     class Meta:
         db_table = "categories"
