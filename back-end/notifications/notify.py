@@ -12,7 +12,7 @@ def send_single_notification(
     notification_type: str,
     description: str,
     template: str = None,
-    sender: str = None,
+    sender: str = settings.DEFAULT_FROM_EMAIL,
 ):
     """
     Sends a single email notification.
@@ -28,12 +28,13 @@ def send_single_notification(
     Returns:
         bool: True if the email was sent successfully, False otherwise.
     """
-
-    send_single_email_notification.delay(
+    try:
+        send_single_email_notification.delay(
         subject, recipient, content, description, notification_type, template, sender
     )
+    except Exception as e:
+        raise Exception(f"Error sending single notification: {e}")
 
-    return True
 
 
 def send_mass_notification(
@@ -46,7 +47,7 @@ def send_mass_notification(
     Sends mass email notifications.
 
     Args:
-        data (list of tuples): A list of tuples, where each tuple contains the recipient's details in the format (subject, recipient, content).
+        data (list of tuples): A list of tuples, where each tuple contains the recipient's details in the format (subject, recipient, content, description).
              - subject (str): The subject of the email.
              - recipient (str): The email address of the recipient.
              - content: The content of the email. if you are using a custom template, content should be a dictionary. Otherwise it should be the string to be sent.
@@ -58,7 +59,7 @@ def send_mass_notification(
     Returns:
         bool: True if the emails were sent successfully, False otherwise.
     """
-
-    send_mass_email_notification.delay(data, notification_type, template, sender)
-
-    return True
+    try:
+        send_mass_email_notification.delay(data, notification_type, template, sender)
+    except Exception as e:
+        raise Exception(f"Error sending mass notification: {e}")
