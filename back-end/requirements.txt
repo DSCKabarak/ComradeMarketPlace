@@ -11,4 +11,5 @@ sqlparse==0.5.0
 django-cors-headers==4.3.1
 drf-spectacular==0.27.2
 whitenoise==6.6.0
+djangorestframework-simplejwt==5.3.1
 gunicorn
