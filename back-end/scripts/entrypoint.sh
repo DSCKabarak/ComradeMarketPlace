@@ -3,8 +3,8 @@
 set -e
 
 # Set superuser credentials as environment variables
-export DJANGO_SUPERUSER_USERNAME=admin
-export DJANGO_SUPERUSER_EMAIL=admin@mail.com
+export DJANGO_SUPERUSER_USERNAME=admin2
+export DJANGO_SUPERUSER_EMAIL=wekesa360@outlook.com
 export DJANGO_SUPERUSER_PASSWORD=password
 
 # Collect static files
@@ -12,6 +12,8 @@ python manage.py collectstatic --noinput --clear
 
 # Make and apply migrations
 python manage.py makemigrations --noinput
+python manage.py makemigrations notifications --noinput
+python manage.py migrate notifications --noinput
 python manage.py migrate --noinput
 
 # Create the superuser non-interactively

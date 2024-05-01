@@ -22,13 +22,25 @@ services:
     env_file:
       - ./.env.prod.db
 
-  pgadmin:
-    container_name: cmp_pgadmin
-    image: dpage/pgadmin4
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=pgadmin4@pgadmin.org
-      - PGADMIN_DEFAULT_PASSWORD=admin
-    ports:
-      - "5050:80"
+  worker:
+    restart: unless-stopped
+    container_name: cmp_worker
+    build:
+      context: .
+      dockerfile: ./celery.Dockerfile
+    command: celery -A cmp worker --loglevel=info
+    env_file:
+      - ./.env.prod
     depends_on:
-      - db
+      - rabbitmq
+      - app
+
+  rabbitmq:
+    restart: unless-stopped
+    image: rabbitmq:latest
+    container_name: 'cmp_rabbitmq'
+    ports:
+      - 5672:5672
+      - 15672:15672
+    env_file:
+      - ./.env.prod.rabbitmq

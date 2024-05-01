@@ -15,6 +15,8 @@ def send_single_email_notification(
     template: str = None,
     sender: str = None,
 ):
+    from marketplace.models import CustomUser
+    
     try:
         if template:
             message = get_template(template_name=template).render(context=content)

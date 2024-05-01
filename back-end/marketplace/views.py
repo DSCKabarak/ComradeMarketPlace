@@ -1,4 +1,6 @@
 from rest_framework.response import Response
+from notifications.notify import send_single_notification
+
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework import permissions
@@ -43,7 +45,19 @@ class ProductViewSet(viewsets.ModelViewSet):
     def create_product(self, request):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            serializer.save()
+            product = serializer.save()
+            send_single_notification.delay(
+                    subject="New Product Added",
+                    recipient="wekesamichaelabraham@gmail.com",
+                    content={
+                        "product_name": product.name,
+                        "product_description": product.description,
+                        # Add more relevant product details
+                    },
+                    notification_type="product_added",
+                    description="A new product has been added.",
+                    sender="wekesa360@outlook.com",
+                )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -194,7 +208,19 @@ class CategoryViewSet(viewsets.ModelViewSet):
     def create_category(self, request):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            serializer.save()
+            category = serializer.save()
+            send_single_notification(
+                    subject="New Product Added",
+                    recipient="michaelwekesa@kabarak.ac.ke",
+                    content={
+                        "product_name": category.category_name,
+                        "product_description": category.sub_category,
+                        # Add more relevant product details
+                    },
+                    notification_type="product_added",
+                    description="A new product has been added.",
+                    sender="wekesa360@outlook.com",
+                )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
