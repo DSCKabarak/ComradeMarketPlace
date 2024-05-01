@@ -70,7 +70,7 @@ class CustomUser(AbstractUser):
         return self.avatar.url
 
     class Meta:
-        unique_together = ("email", "phone_number", "user_type")
+        unique_together = ("phone_number", "user_type")
         db_table = "users"
 
 
