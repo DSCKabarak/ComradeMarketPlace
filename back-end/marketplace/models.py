@@ -1,5 +1,3 @@
-import json
-import uuid
 from django.utils.text import slugify
 from django.db import models
 from accounts.models import CustomUser
