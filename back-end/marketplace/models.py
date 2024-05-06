@@ -35,9 +35,9 @@ def create_category(sender, instance, created, **kwargs):
 
 
 class Product(models.Model):
-    merchant = models.ForeignKey(CustomUser, on_delete=models.NOTHING)
+    merchant = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING)
     category = models.ForeignKey(
-        Category, verbose_name=("categories"), on_delete=models.NOTHING
+        Category, verbose_name=("categories"), on_delete=models.DO_NOTHING
     )
     product_name = models.CharField(max_length=256)
     price = models.IntegerField()
@@ -63,7 +63,7 @@ class Product(models.Model):
 
 class ProductImage(models.Model):
     product = models.ForeignKey(
-        Product, related_name="images", on_delete=models.NOTHING
+        Product, related_name="images", on_delete=models.DO_NOTHING
     )
     image = models.ImageField(upload_to="uploads/product/images/")
     description = models.CharField(max_length=255, blank=True, null=True)
@@ -99,7 +99,6 @@ class SoldProduct(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     sold = models.BooleanField(default=False)
     in_stock = models.BooleanField(default=False)
-    sp_uuid = models.UUIDField(default=uuid.uuid4())
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:

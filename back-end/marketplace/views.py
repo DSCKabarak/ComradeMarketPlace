@@ -1,5 +1,4 @@
 from rest_framework.response import Response
-from notifications.notify import send_single_notification
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework import permissions
@@ -18,10 +17,9 @@ from .models import (
     Comment,
     Bookmark,
 )
-from notifications.notify import send_mass_notification, send_single_notification
 from accounts.models import CustomUser
 from utils.response_utils import ApiResponse
-from django.auth import get_user_model
+from django.contrib.auth import get_user_model
 
 Users = get_user_model()
 response_handler = ApiResponse()
@@ -69,8 +67,11 @@ class ProductViewSet(viewsets.ModelViewSet):
         detail=False,
     )
     def update_product(self, request):
+        product_id = request.query_params.get("id")
+        if not product_id:
+            return response_handler.bad_request(message="Product ID is required")
         try:
-            product = Product.objects.get(id=request.data.get("id"))
+            product = Product.objects.get(id=product_id)
         except Product.DoesNotExist:
             return response_handler.bad_request(message="Product not found")
         except Exception as e:
@@ -92,10 +93,13 @@ class ProductViewSet(viewsets.ModelViewSet):
     def delete_product(self, request):
         user = request.user
         user = Users.objects.get(id=user.id)
+        product_id = request.query_params.get("id")
+        if not product_id:
+            return response_handler.bad_request(message="Product ID is required")
         if user.user_type != "merchant":
             return response_handler.forbidden(message="You are not authorized to perform this action")
         try:
-            product = Product.objects.get(id=request.data.get("id"))
+            product = Product.objects.get(id=product_id)
         except Product.DoesNotExist:
             return response_handler.bad_request(message="Product not found")
         except Exception as e:
@@ -131,6 +135,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(comments, many=True)
         return response_handler.success("Comments found",serializer.data)
 
+    @action(methods=['GET'], detail=False,)
     def get_comments_by_user(self, request):
         user = request.user
         try:
@@ -178,6 +183,8 @@ class CommentViewSet(viewsets.ModelViewSet):
     def delete_comment(self, request):
         user = request.user
         comment_id = request.query_params.get("id")
+        if not comment_id:
+            return response_handler.bad_request(message="Comment ID is required")
         user = Users.objects.get(id=user.id)
         try:
             comment = Comment.objects.filter(id=comment_id, user=user)
@@ -189,7 +196,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ProductImageViewSet(ModelViewSet):
+class ProductImageViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = ProductImage.objects.all()
     serializer_class = ProductImageSerializer
@@ -199,14 +206,15 @@ class ProductImageViewSet(ModelViewSet):
         product_id = request.query_params.get('product_id')
         if not product_id:
             return response_handler.bad_request(message="Product ID is required")
-        
+
         try:
-            images = ProductImage.objects.filter(product_id=product_id).all()
+            images = ProductImage.objects.filter(product=product_id).all()
         except ProductImage.DoesNotExist:
             return response_handler.bad_request(message="No images found")
         serializer = self.get_serializer(images, many=True)
         return response_handler.success("Images found",serializer.data)
 
+    @action(methods=["GET"], detail=False)
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid(raise_exception=True):
@@ -214,6 +222,7 @@ class ProductImageViewSet(ModelViewSet):
         serializer.save()
         return response_handler.created("Image uploaded successfully",serializer.data)
 
+    @action(methods=["PUT"], detail=False)
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data)
@@ -222,6 +231,8 @@ class ProductImageViewSet(ModelViewSet):
         serializer.save()
         return response_handler.success("Image updated successfully",serializer.data)
 
+
+    @action(methods=["DELETE"], detail=False)
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.delete()
