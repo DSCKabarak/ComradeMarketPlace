@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from rest_framework.authtoken.models import Token
+from django.contrib.auth import get_user_model
 from .models import (
     Comment,
     Product,
@@ -8,11 +8,16 @@ from .models import (
     Bookmark,
 )
 
-
+User = get_user_model()
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
-        fields = ["id", "product", "image", "description", "created_at", "updated_at"]
+        fields = ["id", "product", "image", "description"]
+
+    def validate_product(self, value):
+        if not Product.objects.filter(id=value).exists():
+            raise serializers.ValidationError("Product does not exist")
+        return value
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -26,19 +31,25 @@ class ProductSerializer(serializers.ModelSerializer):
             "price",
             "in_stock",
             "tag",
-            "slug",
             "brand",
             "key_features",
             "description",
-            "created_at",
-            "updated_at",
         ]
+    
+    def validate_merchant(self, value):
+        if User.objects.get(id=value).user_type != "merchant":
+            raise serializers.ValidationError("User is not a merchant")
+        return value
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ["category_name", "sub_category", "slug"]
+        fields = [
+            "id",
+            "category_name",
+            "sub_category",
+        ]
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -51,15 +62,14 @@ class CommentSerializer(serializers.ModelSerializer):
             "comment",
             "created_at",
         ]
-
-
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = ["category_name", "sub_category", "slug"]
+    
+    def validate_product(self, value):
+        if not Product.objects.filter(id=value.id).exists():
+            raise serializers.ValidationError("Product does not exist")
+        return value
 
 
 class BookmarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bookmark
-        fields = ["user", "product_id", "favorite", "created_at", "updated_at"]
+        fields = ["user", "product_id", "favorite"]

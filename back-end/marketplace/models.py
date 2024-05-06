@@ -16,9 +16,9 @@ class Category(models.Model):
     def __str__(self):
         category = f"{self.category}, {self.sub_category}"
         return category
-    
+
     def save(self, *args, **kwargs):
-        self.slug  = slugify(f"{self.category}-{self.sub_category}")
+        self.slug = slugify(f"{self.category}-{self.sub_category}")
         super().save(*args, **kwargs)
 
     def get_category_name(self):
@@ -52,19 +52,19 @@ class Product(models.Model):
 
     def __str__(self):
         return self.product_name
-    
+
     def save(self, *args, **kwargs):
         self.slug = slugify(f"{self.id}-{self.product_name}")
         super().save(*args, **kwargs)
-
-    
 
     class Meta:
         db_table = "products"
 
 
 class ProductImage(models.Model):
-    product = models.ForeignKey(Product, related_name='images', on_delete=models.NOTHING)
+    product = models.ForeignKey(
+        Product, related_name="images", on_delete=models.NOTHING
+    )
     image = models.ImageField(upload_to="uploads/product/images/")
     description = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -93,21 +93,21 @@ class Comment(models.Model):
         db_table = "comments"
 
 
-# class SoldProduct(models.Model):
-#     merchant = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='merchant')
-#     buyer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='buyer')
-#     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-#     sold = models.BooleanField(default=False)
-#     in_stock = models.BooleanField(default=False)
-#     sp_uuid = models.UUIDField(default=uuid.uuid4())
-#     created_at = models.DateTimeField(auto_now_add=True)
+class SoldProduct(models.Model):
+    merchant = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='merchant')
+    buyer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='buyer')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    sold = models.BooleanField(default=False)
+    in_stock = models.BooleanField(default=False)
+    sp_uuid = models.UUIDField(default=uuid.uuid4())
+    created_at = models.DateTimeField(auto_now_add=True)
 
-#     def __str__(self) -> str:
-#         return self.sold
+    def __str__(self) -> str:
+        return self.sold
 
 
-#     class Meta:
-#         db_table = 'sold_products'
+    class Meta:
+        db_table = 'sold_products'
 
 
 # class ConfirmPurchase(models.Model):

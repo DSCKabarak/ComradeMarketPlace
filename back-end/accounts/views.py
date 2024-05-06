@@ -1,4 +1,3 @@
-from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework import status, viewsets
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
@@ -8,7 +7,7 @@ from django.utils import timezone
 from django.core.exceptions import ImproperlyConfigured
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model, logout
-from .utils import token_generator_and_check_if_exists
+from utils.token_generator import token_generator_and_check_if_exists
 from rest_framework_simplejwt.exceptions import TokenError
 from drf_spectacular.utils import (
     extend_schema,
@@ -16,9 +15,7 @@ from drf_spectacular.utils import (
     OpenApiTypes,
     OpenApiResponse,
 )
-from django.contrib.auth.signals import user_logged_in, user_logged_out
-from django.dispatch import receiver
-from rest_framework_simplejwt.tokens import OutstandingToken, BlacklistedToken
+from utils.response_utils import ApiResponse
 from .models import EmailVerificationToken, PasswordResetToken
 from .serializers import (
     AuthUserSerializer,
@@ -35,6 +32,7 @@ from .serializers import (
 
 
 User = get_user_model()
+response_handler = ApiResponse()
 
 
 class AuthViewSet(viewsets.GenericViewSet):
@@ -84,26 +82,18 @@ class AuthViewSet(viewsets.GenericViewSet):
             user = serializer.validated_data
             refresh = RefreshToken.for_user(user)
             if not user.is_verified:
-                return self.handle_exception_response(
-                    "NOT_VERIFIED",
+                return response_handler.unauthorized(
                     "User's email is not verified.",
-                    status_response=status.HTTP_400_BAD_REQUEST,
                 )
 
         except ValidationError as e:
-            return self.handle_exception_response(
-                "VALIDATION_ERROR", "Validation Failed", e, status.HTTP_400_BAD_REQUEST
+            return response_handler.unauthorized(
+                "email or password is incorrect, please try again."
             )
 
         except Exception as e:
-            return self.handle_exception_response(
-                "INTERNAL_SERVER_ERROR",
-                "An internal server error occurred",
-                e,
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-        return self.handle_success_response(
+            return response_handler.server_error(e)
+        return response_handler.success(
             "Login successful.",
             {"refresh": str(refresh), "access": str(refresh.access_token)},
         )
@@ -138,7 +128,7 @@ class AuthViewSet(viewsets.GenericViewSet):
                 token=email_verification_token, user=user
             )
             # TODO:: Send Email
-            return self.handle_success_response(
+            return response_handler.created(
                 "User registered successfully.",
                 {
                     "refresh": str(refresh),
@@ -147,16 +137,9 @@ class AuthViewSet(viewsets.GenericViewSet):
                 },
             )
         except ValidationError as e:
-            return self.handle_exception_response(
-                "VALIDATION_ERROR", "Validation Failed", e, status.HTTP_400_BAD_REQUEST
-            )
+            return response_handler.bad_request(e)
         except Exception as e:
-            return self.handle_exception_response(
-                "INTERNAL_SERVER_ERROR",
-                "An internal server error occurred",
-                e,
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            return response_handler.server_error(e)
 
     @extend_schema(
         operation_id="verify_user_email",
@@ -194,31 +177,28 @@ class AuthViewSet(viewsets.GenericViewSet):
                 user.save()
                 email_verification_token.delete()
                 refresh = RefreshToken.for_user(user)
-                response_data = {
-                    "message": "Email verified successfully",
-                    "data": {
+                return response_handler.success(
+                    "Login successful.",
+                    {
                         "refresh": str(refresh),
                         "access": str(refresh.access_token),
                         "user": user.email,
                     },
-                }
-                success_serializer = SuccessSerializer(data=response_data)
-                success_serializer.is_valid(raise_exception=True)
-                return Response(success_serializer.data, status=status.HTTP_200_OK)
+                )
             else:
-                return self.handle_exception_response(
+                return response_handler.handle_exception_response(
                     "EXPIRED_TOKEN",
                     "Invalid or expired verification token.",
                     status_response=status.HTTP_400_BAD_REQUEST,
                 )
         except EmailVerificationToken.DoesNotExist:
-            return self.handle_exception_response(
+            return response_handler.handle_exception_response(
                 "INVALID_TOKEN",
                 "Invalid or expired verification token.",
                 status_response=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:
-            return self.handle_exception_response(
+            return response_handler.handle_exception_response(
                 "INTERNAL_SERVER_ERROR",
                 "An internal server error occurred",
                 e,
@@ -236,22 +216,13 @@ class AuthViewSet(viewsets.GenericViewSet):
             profile = User.objects.get(email=request.user.email)
             serializer = self.get_serializer_class()
             serializer = serializer(profile)
-            return self.handle_success_response(
+            return response_handler.success(
                 "User profile retrieved successfully.", serializer.data
             )
         except User.DoesNotExist:
-            return self.handle_exception_response(
-                "USER_NOT_FOUND",
-                "User not found",
-                status_response=status.HTTP_404_NOT_FOUND,
-            )
+            return response_handler.not_found("User not found.")
         except Exception as e:
-            return self.handle_exception_response(
-                "INTERNAL_SERVER_ERROR",
-                "An internal server error occurred",
-                e,
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            return response_handler.server_error(e)
 
     @extend_schema(
         operation_id="update_user_profile",
@@ -271,28 +242,14 @@ class AuthViewSet(viewsets.GenericViewSet):
             if serializer.is_valid(raise_exception=True):
                 serializer.update(profile, request.data)
             else:
-                return self.handle_exception_response(
-                    "VALIDATION_ERROR",
-                    "Validation Failed",
-                    e,
-                    status.HTTP_400_BAD_REQUEST,
-                )
-            return self.handle_success_response(
+                return response_handler.bad_request(serializer.errors)
+            return response_handler.success(
                 "User profile updated successfully.", serializer.data
             )
         except User.DoesNotExist:
-            return self.handle_exception_response(
-                "USER_NOT_FOUND",
-                "User not found",
-                status_response=status.HTTP_404_NOT_FOUND,
-            )
+            return response_handler.not_found("User not found.")
         except Exception as e:
-            return self.handle_exception_response(
-                "INTERNAL_SERVER_ERROR",
-                "An internal server error occurred",
-                e,
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            return response_handler.server_error(e)
 
     @extend_schema(
         operation_id="change_user_password",
@@ -310,18 +267,13 @@ class AuthViewSet(viewsets.GenericViewSet):
             new_password = serializer.validated_data["new_password"]
             user.set_password(new_password)
             user.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except ValidationError as e:
-            return self.handle_exception_response(
-                "VALIDATION_ERROR", "Validation Failed", e, status.HTTP_400_BAD_REQUEST
+            return response_handler.handle_no_content_response(
+                "Password changed successfully."
             )
-
-        except PasswordResetToken.DoesNotExist:
-            return self.handle_exception_response(
-                "INVALID_TOKEN",
-                "Invalid or expired verification token",
-                status_response=status.HTTP_400_BAD_REQUEST,
-            )
+        except ValidationError:
+            return response_handler.bad_request(serializer.errors)
+        except Exception as e:
+            return response_handler.server_error(e)
 
     @extend_schema(
         operation_id="logout",
@@ -357,23 +309,13 @@ class AuthViewSet(viewsets.GenericViewSet):
                 tokens.blacklist()
 
         except TokenError as e:
-            return self.handle_exception_response(
-                "INVALID_REFRESH_TOKEN",
-                "Invalid or expired token",
-                e,
-                status.HTTP_400_BAD_REQUEST,
-            )
+            return response_handler.forbidden("Invalid token.")
 
         except Exception as e:
-            return self.handle_exception_response(
-                "INTERNAL_SERVER_ERROR",
-                "An internal server error occurred",
-                e,
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            return response_handler.server_error(e)
 
         logout(request)
-        return self.handle_success_response("Successfully logged out.")
+        return response_handler.success("Successfully logged out.")
 
     @extend_schema(
         operation_id="send_user_password_reset_token",
@@ -405,18 +347,14 @@ class AuthViewSet(viewsets.GenericViewSet):
             )
             PasswordResetToken.objects.create(user=user, token=password_reset_token)
             # TODO:: Send Email
-            return self.handle_success_response(
+            return response_handler.success(
                 "Password reset token sent to your email.",
                 {
                     "token": password_reset_token,
                 },
             )
         except User.DoesNotExist:
-            return self.handle_exception_response(
-                "USER_NOT_FOUND",
-                "User not found",
-                status_response=status.HTTP_404_NOT_FOUND,
-            )
+            return response_handler.not_found("User not found.")
 
     @extend_schema(
         operation_id="password_reset",
@@ -436,9 +374,7 @@ class AuthViewSet(viewsets.GenericViewSet):
         try:
             serializer.is_valid(raise_exception=True)
         except ValidationError as e:
-            return self.handle_exception_response(
-                "VALIDATION_ERROR", "Validation Failed", e, status.HTTP_400_BAD_REQUEST
-            )
+            return response_handler.bad_request(serializer.errors)
 
         user = request.user
         password_reset_token = serializer.validated_data["token"]
@@ -452,31 +388,19 @@ class AuthViewSet(viewsets.GenericViewSet):
                 user.set_password(new_password)
                 user.save()
                 token_obj.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
+                return response_handler.success("Password reset successful.")
             else:
-                return self.handle_exception_response(
-                    "INVALID_TOKEN",
-                    "Password reset token has expired.",
-                    status_response=status.HTTP_400_BAD_REQUEST,
+                return response_handler.bad_request(
+                    "Invalid or expired password reset token."
                 )
         except PasswordResetToken.DoesNotExist:
-            return self.handle_exception_response(
-                "INVALID_TOKEN",
-                "Invalid or expired password reset token",
-                e,
-                status.HTTP_400_BAD_REQUEST,
+            return response_handler.bad_request(
+                "Invalid or expired password reset token."
             )
         except TypeError as e:
-            return self.handle_exception_response(
-                "VALIDATION_ERROR", "Validation Failed", e, status.HTTP_400_BAD_REQUEST
-            )
+            return response_handler.bad_request(e)
         except Exception as e:
-            return self.handle_exception_response(
-                "INTERNAL_SERVER_ERROR",
-                "An internal server error occurred",
-                e,
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            return response_handler.server_error(e)
 
     @extend_schema(
         operation_id="refresh_token",
@@ -501,37 +425,14 @@ class AuthViewSet(viewsets.GenericViewSet):
             refresh_token = serializer.validated_data["refresh"]
             token = RefreshToken(refresh_token)
             access_token = str(token.access_token)
-            return self.handle_success_response(
+            return response_handler.success(
                 "Access token successfully refreshed.",
                 {
                     "token": access_token,
                 },
             )
         except TokenError as e:
-            return self.handle_exception_response(
-                "INVALID_REFRESH_TOKEN",
-                "Invalid or expired refresh token",
-                e,
-                status.HTTP_400_BAD_REQUEST,
-            )
-
-    def handle_exception_response(
-        self, error_code, error_message, details=None, status_response=None
-    ):
-        error_data = {
-            "error_code": error_code,
-            "error_message": error_message,
-            "details": [str(details) or ""],
-        }
-        error_serializer = ErrorSerializer(data=error_data)
-        error_serializer.is_valid(raise_exception=True)
-        return Response(error_serializer.data, status_response)
-
-    def handle_success_response(self, message, data=None):
-        response_data = {"message": message, "data": data or {}}
-        success_serializer = SuccessSerializer(data=response_data)
-        success_serializer.is_valid(raise_exception=True)
-        return Response(success_serializer.data, status.HTTP_200_OK)
+            return response_handler.bad_request(e)
 
     def get_serializer_class(self):
         if not isinstance(self.serializer_classes, dict):
