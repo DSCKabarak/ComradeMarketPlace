@@ -6,35 +6,35 @@ urlpatterns = [
     path("logout", AuthViewSet.as_view({"get": "logout"}), name="logout"),
     path("register", AuthViewSet.as_view({"post": "register"}), name="register"),
     path(
-        "verify_email",
+        "verify-email",
         AuthViewSet.as_view({"get": "verify_email"}),
         name="verify-email",
     ),
     path(
-        "reset_password",
+        "reset-password",
         AuthViewSet.as_view({"post": "reset_password"}),
         name="reset-password",
     ),
     path(
-        "send_password_reset_token",
+        "send-password-reset-token",
         AuthViewSet.as_view({"post": "send_password_reset_token"}),
         name="send-password-reset-token",
     ),
     path(
-        "change_password",
+        "change-password",
         AuthViewSet.as_view({"post": "change_password"}),
         name="change-password",
     ),
     path(
-        "get_profile", AuthViewSet.as_view({"get": "get_profile"}), name="get-profile"
+        "profile", AuthViewSet.as_view({"get": "get_profile"}), name="get-profile"
     ),
     path(
-        "update_profile",
+        "profile/update",
         AuthViewSet.as_view({"put": "update_profile"}),
         name="update-profile",
     ),
     path(
-        "refresh_token",
+        "refresh-token",
         AuthViewSet.as_view({"post": "refresh_token"}),
         name="refresh-token",
     ),

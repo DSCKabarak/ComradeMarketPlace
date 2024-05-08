@@ -1,12 +1,13 @@
 from rest_framework.serializers import ValidationError
 from rest_framework import status, viewsets
-from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.models import TokenUser
 from rest_framework.decorators import action
 from datetime import timedelta
 from django.utils import timezone
 from django.core.exceptions import ImproperlyConfigured
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.contrib.auth import get_user_model, logout
+from django.contrib.auth import get_user_model, logout as auth_logout
 from utils.token_generator import token_generator_and_check_if_exists
 from rest_framework_simplejwt.exceptions import TokenError
 from drf_spectacular.utils import (
@@ -238,18 +239,18 @@ class AuthViewSet(viewsets.GenericViewSet):
         try:
             profile = User.objects.get(email=request.user.email)
             serializer = self.get_serializer_class()
+            request.data["email"] = profile.email
             serializer = serializer(profile, data=request.data, partial=True)
-            if serializer.is_valid(raise_exception=True):
-                serializer.update(profile, request.data)
-            else:
+            if not serializer.is_valid(raise_exception=True):
                 return response_handler.bad_request(serializer.errors)
+            serializer.update(profile, request.data)
             return response_handler.success(
                 "User profile updated successfully.", serializer.data
             )
-        except User.DoesNotExist:
-            return response_handler.not_found("User not found.")
+        except ValidationError as e:
+            return response_handler.bad_request("Validation Error", str(e))
         except Exception as e:
-            return response_handler.server_error(e)
+            return response_handler.server_error(str(e))
 
     @extend_schema(
         operation_id="change_user_password",
@@ -292,29 +293,20 @@ class AuthViewSet(viewsets.GenericViewSet):
     @action(methods=["GET"], detail=False)
     def logout(self, request):
         try:
-            refresh_token = request.query_params.get("refresh")
-            access_token = request.query_params.get("access")
+            refresh = request.query_params.get("refresh")
+            user = request.user
 
-            if refresh_token:
-                token = RefreshToken(refresh_token)
-                token.blacklist()
-
-            if access_token:
-                token = AccessToken(access_token)
-                token.blacklist()
-
-            if not refresh_token and not access_token:
-                tokens = RefreshToken.for_user(request.user)
-                tokens.access_token.blacklist()
-                tokens.blacklist()
-
+            tokens = RefreshToken(refresh)
+            tokens.blacklist()
+            
+            token_users = Token.objects.filter(user=user)
+            for token_user in token_users:
+                token_user.delete()
         except TokenError as e:
             return response_handler.forbidden("Invalid token.")
 
         except Exception as e:
-            return response_handler.server_error(e)
-
-        logout(request)
+            return response_handler.server_error(str(e))
         return response_handler.success("Successfully logged out.")
 
     @extend_schema(

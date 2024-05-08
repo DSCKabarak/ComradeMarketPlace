@@ -125,17 +125,32 @@ class AccountProfileSerializer(serializers.ModelSerializer):
             "avatar",
         ]
 
-        def update(self, instance, validated_data):
-            instance.first_name = validated_data.get("first_name", instance.first_name)
-            instance.last_name = validated_data.get("last_name", instance.last_name)
-            instance.bio = validated_data.get("bio", instance.bio)
-            instance.phone_number = validated_data.get(
-                "phone_number", instance.phone_number
-            )
-            instance.user_type = validated_data.get("user_type", instance.user_type)
-            instance.avatar = validated_data.get("avatar", instance.avatar)
-            instance.save()
-            return instance
+
+    def validate(self, attrs):
+            phone_number = attrs.get("phone_number")
+            user_type = attrs.get("user_type")
+            current_user = attrs.get("email")
+            if User.objects.filter(phone_number=phone_number, user_type=user_type).exclude(email=current_user).exists():
+                raise serializers.ValidationError("Phone number is already taken with the same user type")
+            return attrs
+
+    def validate_user_type(self, value):
+        if value not in ["customer", "merchant"]:
+            raise serializers.ValidationError("Invalid user type")
+        return value
+
+
+    def update(self, instance, validated_data):
+        instance.first_name = validated_data.get("first_name", instance.first_name)
+        instance.last_name = validated_data.get("last_name", instance.last_name)
+        instance.bio = validated_data.get("bio", instance.bio)
+        instance.phone_number = validated_data.get(
+            "phone_number", instance.phone_number
+        )
+        instance.user_type = validated_data.get("user_type", instance.user_type)
+        instance.avatar = validated_data.get("avatar", instance.avatar)
+        instance.save()
+        return instance
 
 
 class ErrorSerializer(serializers.Serializer):
