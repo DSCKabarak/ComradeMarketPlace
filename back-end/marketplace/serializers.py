@@ -37,7 +37,7 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
     
     def validate_merchant(self, value):
-        if User.objects.get(id=value).user_type != "merchant":
+        if User.objects.get(id=value.id).user_type != "merchant":
             raise serializers.ValidationError("User is not a merchant")
         return value
 

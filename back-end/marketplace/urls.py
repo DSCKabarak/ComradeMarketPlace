@@ -9,10 +9,10 @@ from .views import (
 
 urlpatterns = [
     # Products
-    path("products", ProductViewSet.as_view({"get": "get_products"}), name="product-list"),
+    path("all-products", ProductViewSet.as_view({"get": "get_products"}), name="product-list"),
     path("products", ProductViewSet.as_view({"post": "create_product"}), name="product-create"),
-    path("products/<int:product_id>", ProductViewSet.as_view({"put": "update_product"}), name="product-update"),
-    path("products/<int:product_id>", ProductViewSet.as_view({"delete": "delete_product"}), name="product-delete"),
+    path("products/update", ProductViewSet.as_view({"put": "update_product"}), name="product-update"),
+    path("products/delete", ProductViewSet.as_view({"delete": "delete_product"}), name="product-delete"),
     
     # Comments
     path("product/comments", CommentViewSet.as_view({"get": "get_comments_by_product"}), name="product-comment-list"),
@@ -27,7 +27,7 @@ urlpatterns = [
     path("product-images/<int:product_id>/images", ProductImageViewSet.as_view({"delete": "destroy"}), name="product-image-delete"),
     
     # Categories
-    path("categories", CategoryViewSet.as_view({"get": "get_categories"}), name="category-list"),
+    path("all-categories", CategoryViewSet.as_view({"get": "get_categories"}), name="category-list"),
     path("categories", CategoryViewSet.as_view({"post": "create_category"}), name="category-create"),
     path("categories/<int:product_id>", CategoryViewSet.as_view({"put": "update_category"}), name="category-update"),
     

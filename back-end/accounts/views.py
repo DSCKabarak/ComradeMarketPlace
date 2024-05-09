@@ -1,7 +1,6 @@
 from rest_framework.serializers import ValidationError
 from rest_framework import status, viewsets
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.models import TokenUser
+from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken
 from rest_framework.decorators import action
 from datetime import timedelta
 from django.utils import timezone
@@ -10,6 +9,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model, logout as auth_logout
 from utils.token_generator import token_generator_and_check_if_exists
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_spectacular.utils import (
     extend_schema,
     OpenApiParameter,
@@ -37,6 +37,7 @@ response_handler = ApiResponse()
 
 
 class AuthViewSet(viewsets.GenericViewSet):
+    authentication_classes = [JWTAuthentication]
     serializer_classes = {
         "login": AuthUserSerializer,
         "register": UserRegisterSerializer,
@@ -79,21 +80,17 @@ class AuthViewSet(viewsets.GenericViewSet):
         serializer = self.get_serializer_class()
         serializer = serializer(data=request.data)
         try:
-            serializer.is_valid(raise_exception=True)
+            if not serializer.is_valid(raise_exception=True):
+                return response_handler.unauthorized(
+                "Unauthorized", serializer.errors)
             user = serializer.validated_data
             refresh = RefreshToken.for_user(user)
             if not user.is_verified:
                 return response_handler.unauthorized(
                     "User's email is not verified.",
                 )
-
-        except ValidationError as e:
-            return response_handler.unauthorized(
-                "email or password is incorrect, please try again."
-            )
-
         except Exception as e:
-            return response_handler.server_error(e)
+            return response_handler.server_error(str(e))
         return response_handler.success(
             "Login successful.",
             {"refresh": str(refresh), "access": str(refresh.access_token)},
@@ -138,9 +135,9 @@ class AuthViewSet(viewsets.GenericViewSet):
                 },
             )
         except ValidationError as e:
-            return response_handler.bad_request(e)
+            return response_handler.bad_request("Bad request", str(e))
         except Exception as e:
-            return response_handler.server_error(e)
+            return response_handler.server_error(str(e))
 
     @extend_schema(
         operation_id="verify_user_email",
@@ -179,7 +176,7 @@ class AuthViewSet(viewsets.GenericViewSet):
                 email_verification_token.delete()
                 refresh = RefreshToken.for_user(user)
                 return response_handler.success(
-                    "Login successful.",
+                    "Email verification successful.",
                     {
                         "refresh": str(refresh),
                         "access": str(refresh.access_token),
@@ -187,24 +184,11 @@ class AuthViewSet(viewsets.GenericViewSet):
                     },
                 )
             else:
-                return response_handler.handle_exception_response(
-                    "EXPIRED_TOKEN",
-                    "Invalid or expired verification token.",
-                    status_response=status.HTTP_400_BAD_REQUEST,
-                )
+                return response_handler.bad_request("Invalid or expired verification token.")
         except EmailVerificationToken.DoesNotExist:
-            return response_handler.handle_exception_response(
-                "INVALID_TOKEN",
-                "Invalid or expired verification token.",
-                status_response=status.HTTP_400_BAD_REQUEST,
-            )
+            return response_handler.bad_request("Invalid or expired verification token.")
         except Exception as e:
-            return response_handler.handle_exception_response(
-                "INTERNAL_SERVER_ERROR",
-                "An internal server error occurred",
-                e,
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            return response_handler.server_error(str(e))
 
     @extend_schema(
         operation_id="get_user_profile",
@@ -223,7 +207,7 @@ class AuthViewSet(viewsets.GenericViewSet):
         except User.DoesNotExist:
             return response_handler.not_found("User not found.")
         except Exception as e:
-            return response_handler.server_error(e)
+            return response_handler.server_error(str(e))
 
     @extend_schema(
         operation_id="update_user_profile",
@@ -274,7 +258,7 @@ class AuthViewSet(viewsets.GenericViewSet):
         except ValidationError:
             return response_handler.bad_request(serializer.errors)
         except Exception as e:
-            return response_handler.server_error(e)
+            return response_handler.server_error(str(e))
 
     @extend_schema(
         operation_id="logout",
@@ -295,13 +279,11 @@ class AuthViewSet(viewsets.GenericViewSet):
         try:
             refresh = request.query_params.get("refresh")
             user = request.user
-
+            outstanding_tokens = OutstandingToken.objects.filter(user=user)
+            outstanding_tokens.delete()
             tokens = RefreshToken(refresh)
             tokens.blacklist()
-            
-            token_users = Token.objects.filter(user=user)
-            for token_user in token_users:
-                token_user.delete()
+            auth_logout(request)
         except TokenError as e:
             return response_handler.forbidden("Invalid token.")
 
@@ -390,9 +372,9 @@ class AuthViewSet(viewsets.GenericViewSet):
                 "Invalid or expired password reset token."
             )
         except TypeError as e:
-            return response_handler.bad_request(e)
+            return response_handler.bad_request(str(e))
         except Exception as e:
-            return response_handler.server_error(e)
+            return response_handler.server_error(str(e))
 
     @extend_schema(
         operation_id="refresh_token",
@@ -424,7 +406,7 @@ class AuthViewSet(viewsets.GenericViewSet):
                 },
             )
         except TokenError as e:
-            return response_handler.bad_request(e)
+            return response_handler.bad_request(str(e))
 
     def get_serializer_class(self):
         if not isinstance(self.serializer_classes, dict):

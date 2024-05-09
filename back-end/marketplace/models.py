@@ -1,46 +1,48 @@
 from django.utils.text import slugify
 from django.db import models
-from accounts.models import CustomUser
+from django.contrib.auth import get_user_model
 from notifications.notify import send_new_category_notification
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+CustomUser = get_user_model()
 
 class Category(models.Model):
-    category = models.CharField(max_length=256)
+    category_name = models.CharField(max_length=256)
     sub_category = models.CharField(max_length=256)
     slug = models.CharField(max_length=256, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        category = f"{self.category}, {self.sub_category}"
+        category = f"{self.category_name}, {self.sub_category}"
         return category
 
     def save(self, *args, **kwargs):
-        self.slug = slugify(f"{self.category}-{self.sub_category}")
+        self.slug = slugify(f"{self.category_name}-{self.sub_category}")
         super().save(*args, **kwargs)
 
     def get_category_name(self):
-        return f"{self.category}, {self.sub_category}"
+        return f"{self.category_name}, {self.sub_category}"
 
     class Meta:
         db_table = "categories"
 
 
-@receiver(post_save, sender=Category)
-def create_category(sender, instance, created, **kwargs):
-    if created:
-        send_new_category_notification(instance)
+# @receiver(post_save, sender=Category)
+# def create_category(sender, instance, created, **kwargs):
+#     if created:
+#         send_new_category_notification(instance)
 
 
 class Product(models.Model):
-    merchant = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING)
+    merchant = models.ForeignKey(CustomUser, verbose_name=("merchant"),
+                                 related_name="product_owner",on_delete=models.DO_NOTHING)
     category = models.ForeignKey(
         Category, verbose_name=("categories"), on_delete=models.DO_NOTHING
     )
     product_name = models.CharField(max_length=256)
-    price = models.IntegerField()
+    price = models.DecimalField(decimal_places=2, max_digits=10)
     in_stock = models.BooleanField(default=False)
     tag = models.CharField(max_length=256)
     slug = models.CharField(max_length=256, blank=True, null=True)

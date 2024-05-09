@@ -40,7 +40,7 @@ class ProductViewSet(viewsets.ModelViewSet):
             return response_handler.bad_request(message="No products found")
         except Exception as e:
             return response_handler.server_error(message=e)
-        return response_handler.success("products found",serializer.data)
+        return response_handler.success("all found products",serializer.data)
 
     @action(
         methods=[
@@ -50,13 +50,16 @@ class ProductViewSet(viewsets.ModelViewSet):
     )
     def create_product(self, request):
         user = request.user
-        if user.user_type != "merchant":
-            return response_handler.forbidden(message="You are not authorized to perform this action")
-        serializer = self.get_serializer(data=request.data)
+        request.data["merchant"] = user.id
         try:
-           serializer.is_valid(raise_exception=True)
-        except Exception:
-            return response_handler.bad_request(errors=serializer.errors)
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return response_handler.created("Product created successfully", serializer.data)
+            else:
+                return response_handler.bad_request(errors=serializer.errors)
+        except Exception as e:
+            return response_handler.server_error(message=str(e))     
         serializer.save()
         return response_handler.created("Product created successfully",serializer.data)
 
@@ -68,6 +71,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     )
     def update_product(self, request):
         product_id = request.query_params.get("id")
+        user = request.user
+        request.data["merchant"] = user.id
         if not product_id:
             return response_handler.bad_request(message="Product ID is required")
         try:
@@ -107,7 +112,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         if user != product.merchant:
             return response_handler.forbidden(message="You are not authorized to perform this action")
         product.delete()
-        return response_handler.no_content("Product deleted successfully")
+        return response_handler.success("Product deleted successfully")
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -264,7 +269,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     def create_category(self, request):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid(raise_exception=True):
-            return response_handler.bad_request(errors=serializer.errors)
+            return response_handler.bad_request("Bad request", errors=serializer.errors)
         serializer.save()
         return response_handler.created("Category created successfully",serializer.data)
 
@@ -278,7 +283,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         category = Category.objects.get(id=request.data.get("id"))
         serializer = self.get_serializer(category, data=request.data)
         if not serializer.is_valid(raise_exception=True):
-            return response_handler.bad_request(errors=serializer.errors)
+            return response_handler.bad_request("Bad request",errors=serializer.errors)
         serializer.save()
         return response_handler.success("Category updated successfully",serializer.data)
         
