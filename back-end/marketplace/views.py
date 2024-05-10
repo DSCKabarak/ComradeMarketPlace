@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 from rest_framework import status, viewsets
+from django.db.models import Q
 from rest_framework.decorators import action
 from rest_framework import permissions
 from .serializers import (
@@ -268,23 +269,33 @@ class CategoryViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid(raise_exception=True):
             return response_handler.bad_request("Bad request", errors=serializer.errors)
-        serializer.save()
+        category_name = serializer.validated_data.get("category_name", " ").lower()
+        sub_category = serializer.validated_data.get("sub_category", " ").lower()
+        if Category.objects.filter(Q(category_name__iexact=category_name) | Q(sub_category__iexact=sub_category)).exists():
+            return response_handler.bad_request("Category already exists")
+        
+        serializer.save(category_name=category_name, sub_category=sub_category)
         return response_handler.created("Category created successfully",serializer.data)
-
+    
     @action(
         methods=[
-            "PUT",
+            "DELETE",
         ],
         detail=False,
     )
-    def update_category(self, request):
-        category = Category.objects.get(id=request.data.get("id"))
-        serializer = self.get_serializer(category, data=request.data)
-        if not serializer.is_valid(raise_exception=True):
-            return response_handler.bad_request("Bad request",errors=serializer.errors)
-        serializer.save()
-        return response_handler.success("Category updated successfully",serializer.data)
-        
+    def delete_category(self, request):
+        category_id = request.query_params.get("id")
+        if not category_id:
+            return response_handler.bad_request("Category ID is required")
+        try:
+            category = Category.objects.get(id=category_id)
+            category.delete()
+        except Category.DoesNotExist:
+            return response_handler.bad_request("Category not found")
+        except Exception as e:
+            return response_handler.server_error(message=e)
+        return response_handler.success("Category deleted successfully")
+
 
 
 class BookmarkViewSet(viewsets.ModelViewSet):

@@ -27,8 +27,8 @@ urlpatterns = [
     
     # Categories
     path("all-categories", CategoryViewSet.as_view({"get": "get_categories"}), name="category-list"),
-    path("categories", CategoryViewSet.as_view({"post": "create_category"}), name="category-create"),
-    path("categories/<int:product_id>", CategoryViewSet.as_view({"put": "update_category"}), name="category-update"),
+    path("category/add", CategoryViewSet.as_view({"post": "create_category"}), name="category-create"),
+    path("category/delete", CategoryViewSet.as_view({"delete": "delete_category"}), name="category-delete"),
     
     # Bookmarks
     path("bookmarks", BookmarkViewSet.as_view({"get": "get_bookmarks"}), name="bookmark-list"),
