@@ -2,6 +2,12 @@ from rest_framework.response import Response
 from rest_framework import status, viewsets
 from django.db.models import Q
 from rest_framework.decorators import action
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiParameter,
+    OpenApiTypes,
+    OpenApiResponse,
+)
 from rest_framework import permissions
 from .serializers import (
     ProductImageSerializer,
@@ -18,7 +24,6 @@ from .models import (
     Comment,
     Bookmark,
 )
-from accounts.models import CustomUser
 from utils.response_utils import ApiResponse
 from django.contrib.auth import get_user_model
 
@@ -48,10 +53,13 @@ class ProductViewSet(viewsets.ModelViewSet):
             return response_handler.server_error(message=e)
         return response_handler.success("all found products", serializer.data)
 
+    @extend_schema(
+        operation_id="create_product",
+        request=serializer_class,
+        responses={201: OpenApiResponse(description="Product created successfully")},
+    )
     @action(
-        methods=[
-            "POST",
-        ],
+        methods=["POST"],
         detail=False,
     )
     def create_product(self, request):
@@ -59,22 +67,29 @@ class ProductViewSet(viewsets.ModelViewSet):
         request.data["merchant"] = user.id
         try:
             serializer = self.get_serializer(data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return response_handler.created(
-                    "Product created successfully", serializer.data
-                )
-            else:
+            if not serializer.is_valid():
                 return response_handler.bad_request(errors=serializer.errors)
         except Exception as e:
             return response_handler.server_error(message=str(e))
         serializer.save()
         return response_handler.created("Product created successfully", serializer.data)
 
-    @action(
-        methods=[
-            "PUT",
+    @extend_schema(
+        operation_id="update_product",
+        parameters=[
+            OpenApiParameter(
+                name="id",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="Product ID",
+            )
         ],
+        request=serializer_class,
+        responses={200: OpenApiResponse(description="Product updated successfully")},
+    )
+    @action(
+        methods=["PUT"],
         detail=False,
     )
     def update_product(self, request):
@@ -173,10 +188,12 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(comments, many=True)
         return response_handler.success("Comments found", serializer.data)
 
+    @extend_schema(
+        request=serializer_class,
+        responses={201: OpenApiResponse(description="Comment posted successfully")},
+    )
     @action(
-        methods=[
-            "POST",
-        ],
+        methods=["POST"],
         detail=False,
     )
     def post_comment(self, request):
@@ -243,7 +260,14 @@ class ProductImageViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(images, many=True)
         return response_handler.success("Images found", serializer.data)
 
-    @action(methods=["POST"], detail=False)
+    @extend_schema(
+        request=serializer_class,
+        responses={201: OpenApiResponse(description="Image uploaded successfully")},
+    )
+    @action(
+        methods=["POST"],
+        detail=False,
+    )
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid(raise_exception=True):
@@ -274,10 +298,12 @@ class CategoryViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(categories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @extend_schema(
+        request=serializer_class,
+        responses={201: OpenApiResponse(description="Category created successfully")},
+    )
     @action(
-        methods=[
-            "POST",
-        ],
+        methods=["POST"],
         detail=False,
     )
     def create_category(self, request):
@@ -335,10 +361,12 @@ class BookmarkViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(bookmarks, many=True)
         return response_handler.success("Bookmarks found", serializer.data)
 
+    @extend_schema(
+        request=serializer_class,
+        responses={201: OpenApiResponse(description="Bookmark created successfully")},
+    )
     @action(
-        methods=[
-            "POST",
-        ],
+        methods=["POST"],
         detail=False,
     )
     def create_bookmark(self, request):
@@ -351,10 +379,12 @@ class BookmarkViewSet(viewsets.ModelViewSet):
             "Bookmark created successfully", serializer.data
         )
 
+    @extend_schema(
+        request=serializer_class,
+        responses={200: OpenApiResponse(description="Bookmark updated successfully")},
+    )
     @action(
-        methods=[
-            "PUT",
-        ],
+        methods=["PUT"],
         detail=False,
     )
     def update_bookmark(self, request):
