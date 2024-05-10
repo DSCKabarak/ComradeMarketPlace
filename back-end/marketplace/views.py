@@ -127,7 +127,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         detail=False,
     )
     def get_comments_by_product(self, request):
-        product_id = request.query_params.get("product_id")
+        product_id = request.query_params.get("id")
         if not product_id:
             return response_handler.bad_request(message="Product ID is required")
         try:
@@ -213,19 +213,21 @@ class ProductImageViewSet(viewsets.ModelViewSet):
     serializer_class = ProductImageSerializer
 
     @action(detail=False, methods=["GET"])
-    def images(self, request):
-        product_id = request.query_params.get('product_id')
+    def get_images(self, request):
+        product_id = request.query_params.get('id')
         if not product_id:
             return response_handler.bad_request(message="Product ID is required")
 
         try:
             images = ProductImage.objects.filter(product=product_id).all()
-        except ProductImage.DoesNotExist:
-            return response_handler.bad_request(message="No images found")
+            if not images.exists():
+                return response_handler.success(message="No images found")
+        except Exception as e:
+            return response_handler.server_error(message=str(e))
         serializer = self.get_serializer(images, many=True)
         return response_handler.success("Images found",serializer.data)
 
-    @action(methods=["GET"], detail=False)
+    @action(methods=["POST"], detail=False)
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid(raise_exception=True):
@@ -233,21 +235,11 @@ class ProductImageViewSet(viewsets.ModelViewSet):
         serializer.save()
         return response_handler.created("Image uploaded successfully",serializer.data)
 
-    @action(methods=["PUT"], detail=False)
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data)
-        if not serializer.is_valid(raise_exception=True):
-            return response_handler.bad_request(errors=serializer.errors)
-        serializer.save()
-        return response_handler.success("Image updated successfully",serializer.data)
-
-
     @action(methods=["DELETE"], detail=False)
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.delete()
-        return response_handler.no_content("Image deleted successfully")
+        return response_handler.success("Image deleted successfully")
 
 
 class CategoryViewSet(viewsets.ModelViewSet):

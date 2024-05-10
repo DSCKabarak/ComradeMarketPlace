@@ -21,10 +21,9 @@ urlpatterns = [
     path("comments/delete", CommentViewSet.as_view({"delete": "delete_comment"}), name="comment-delete"),
     
     # Product Images
-    path("product-images/<int:product_id>/images", ProductImageViewSet.as_view({"get": "images"}), name="product-image-list"),
-    path("product-images/<int:product_id>/images", ProductImageViewSet.as_view({"post": "create"}), name="product-image-create"),
-    path("product-images/<int:product_id>/images", ProductImageViewSet.as_view({"put": "update"}), name="product-image-update"),
-    path("product-images/<int:product_id>/images", ProductImageViewSet.as_view({"delete": "destroy"}), name="product-image-delete"),
+    path("product/images", ProductImageViewSet.as_view({"get": "get_images"}), name="product-image-list"),
+    path("product/images/add", ProductImageViewSet.as_view({"post": "create"}), name="product-image-create"),
+    path("product/images/delete/<int:pk>", ProductImageViewSet.as_view({"delete": "destroy"}), name="product-image-delete"),
     
     # Categories
     path("all-categories", CategoryViewSet.as_view({"get": "get_categories"}), name="category-list"),

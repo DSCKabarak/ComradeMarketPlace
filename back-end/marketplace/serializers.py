@@ -10,12 +10,13 @@ from .models import (
 
 User = get_user_model()
 class ProductImageSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(required=True, allow_empty_file=False, use_url=False)
     class Meta:
         model = ProductImage
         fields = ["id", "product", "image", "description"]
 
     def validate_product(self, value):
-        if not Product.objects.filter(id=value).exists():
+        if not Product.objects.filter(id=value.id).exists():
             raise serializers.ValidationError("Product does not exist")
         return value
 
