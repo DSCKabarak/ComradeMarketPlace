@@ -25,23 +25,28 @@ from django.contrib.auth import get_user_model
 Users = get_user_model()
 response_handler = ApiResponse()
 
+
 class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
     @action(
-        methods=["GET",],detail=False,)
+        methods=[
+            "GET",
+        ],
+        detail=False,
+    )
     def get_products(self, request):
         user = request.user
-        try: 
+        try:
             products = Product.objects.filter(merchant=user)
             serializer = self.get_serializer(products, many=True)
-        except  Product.DoesNotExist:
+        except Product.DoesNotExist:
             return response_handler.bad_request(message="No products found")
         except Exception as e:
             return response_handler.server_error(message=e)
-        return response_handler.success("all found products",serializer.data)
+        return response_handler.success("all found products", serializer.data)
 
     @action(
         methods=[
@@ -56,13 +61,15 @@ class ProductViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
-                return response_handler.created("Product created successfully", serializer.data)
+                return response_handler.created(
+                    "Product created successfully", serializer.data
+                )
             else:
                 return response_handler.bad_request(errors=serializer.errors)
         except Exception as e:
-            return response_handler.server_error(message=str(e))     
+            return response_handler.server_error(message=str(e))
         serializer.save()
-        return response_handler.created("Product created successfully",serializer.data)
+        return response_handler.created("Product created successfully", serializer.data)
 
     @action(
         methods=[
@@ -88,7 +95,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         except Exception:
             return response_handler.bad_request(errors=serializer.errors)
         serializer.save()
-        return response_handler.success("Product updated successfully",serializer.data)
+        return response_handler.success("Product updated successfully", serializer.data)
 
     @action(
         methods=[
@@ -103,7 +110,9 @@ class ProductViewSet(viewsets.ModelViewSet):
         if not product_id:
             return response_handler.bad_request(message="Product ID is required")
         if user.user_type != "merchant":
-            return response_handler.forbidden(message="You are not authorized to perform this action")
+            return response_handler.forbidden(
+                message="You are not authorized to perform this action"
+            )
         try:
             product = Product.objects.get(id=product_id)
         except Product.DoesNotExist:
@@ -111,7 +120,9 @@ class ProductViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return response_handler.server_error(message=e)
         if user != product.merchant:
-            return response_handler.forbidden(message="You are not authorized to perform this action")
+            return response_handler.forbidden(
+                message="You are not authorized to perform this action"
+            )
         product.delete()
         return response_handler.success("Product deleted successfully")
 
@@ -143,9 +154,12 @@ class CommentViewSet(viewsets.ModelViewSet):
         if len(comments) == 0:
             return response_handler.success(message="No comments found")
         serializer = self.get_serializer(comments, many=True)
-        return response_handler.success("Comments found",serializer.data)
+        return response_handler.success("Comments found", serializer.data)
 
-    @action(methods=['GET'], detail=False,)
+    @action(
+        methods=["GET"],
+        detail=False,
+    )
     def get_comments_by_user(self, request):
         user = request.user
         try:
@@ -157,7 +171,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         if len(comments) == 0:
             return response_handler.success(message="No comments found")
         serializer = self.get_serializer(comments, many=True)
-        return response_handler.success("Comments found",serializer.data)
+        return response_handler.success("Comments found", serializer.data)
 
     @action(
         methods=[
@@ -175,16 +189,17 @@ class CommentViewSet(viewsets.ModelViewSet):
         except Product.DoesNotExist:
             return response_handler.bad_request(message="Product not found")
         except SoldProduct.DoesNotExist:
-            return response_handler.forbidden(message="You are not authorized to perform this action")
+            return response_handler.forbidden(
+                message="You are not authorized to perform this action"
+            )
         except Exception as e:
             return response_handler.server_error(message=str(e))
         serializer = self.get_serializer(data=request.data)
-        
+
         if not serializer.is_valid(raise_exception=True):
             return response_handler.bad_request(errors=serializer.errors)
         serializer.save()
-        return response_handler.created("Comment posted successfully",serializer.data)
-
+        return response_handler.created("Comment posted successfully", serializer.data)
 
     @action(
         methods=[
@@ -215,7 +230,7 @@ class ProductImageViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["GET"])
     def get_images(self, request):
-        product_id = request.query_params.get('id')
+        product_id = request.query_params.get("id")
         if not product_id:
             return response_handler.bad_request(message="Product ID is required")
 
@@ -226,7 +241,7 @@ class ProductImageViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return response_handler.server_error(message=str(e))
         serializer = self.get_serializer(images, many=True)
-        return response_handler.success("Images found",serializer.data)
+        return response_handler.success("Images found", serializer.data)
 
     @action(methods=["POST"], detail=False)
     def create(self, request, *args, **kwargs):
@@ -234,7 +249,7 @@ class ProductImageViewSet(viewsets.ModelViewSet):
         if not serializer.is_valid(raise_exception=True):
             return response_handler.bad_request(errors=serializer.errors)
         serializer.save()
-        return response_handler.created("Image uploaded successfully",serializer.data)
+        return response_handler.created("Image uploaded successfully", serializer.data)
 
     @action(methods=["DELETE"], detail=False)
     def destroy(self, request, *args, **kwargs):
@@ -271,12 +286,17 @@ class CategoryViewSet(viewsets.ModelViewSet):
             return response_handler.bad_request("Bad request", errors=serializer.errors)
         category_name = serializer.validated_data.get("category_name", " ").lower()
         sub_category = serializer.validated_data.get("sub_category", " ").lower()
-        if Category.objects.filter(Q(category_name__iexact=category_name) | Q(sub_category__iexact=sub_category)).exists():
+        if Category.objects.filter(
+            Q(category_name__iexact=category_name)
+            | Q(sub_category__iexact=sub_category)
+        ).exists():
             return response_handler.bad_request("Category already exists")
-        
+
         serializer.save(category_name=category_name, sub_category=sub_category)
-        return response_handler.created("Category created successfully",serializer.data)
-    
+        return response_handler.created(
+            "Category created successfully", serializer.data
+        )
+
     @action(
         methods=[
             "DELETE",
@@ -297,7 +317,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return response_handler.success("Category deleted successfully")
 
 
-
 class BookmarkViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Bookmark.objects.all()
@@ -314,7 +333,7 @@ class BookmarkViewSet(viewsets.ModelViewSet):
         if not bookmarks.exists():
             return response_handler.bad_request("No bookmarks found")
         serializer = self.get_serializer(bookmarks, many=True)
-        return response_handler.success("Bookmarks found",serializer.data)
+        return response_handler.success("Bookmarks found", serializer.data)
 
     @action(
         methods=[
@@ -328,8 +347,9 @@ class BookmarkViewSet(viewsets.ModelViewSet):
         if not serializer.is_valid(raise_exception=True):
             return response_handler.bad_request(errors=serializer.errors)
         serializer.save()
-        return response_handler.created("Bookmark created successfully",serializer.data)
-        
+        return response_handler.created(
+            "Bookmark created successfully", serializer.data
+        )
 
     @action(
         methods=[
@@ -343,8 +363,9 @@ class BookmarkViewSet(viewsets.ModelViewSet):
         if not serializer.is_valid(raise_exception=True):
             return response_handler.bad_request(errors=serializer.errors)
         serializer.save()
-        return response_handler.success("Bookmark updated successfully",serializer.data)
-        
+        return response_handler.success(
+            "Bookmark updated successfully", serializer.data
+        )
 
     @action(
         methods=[

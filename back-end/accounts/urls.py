@@ -25,9 +25,7 @@ urlpatterns = [
         AuthViewSet.as_view({"post": "change_password"}),
         name="change-password",
     ),
-    path(
-        "profile", AuthViewSet.as_view({"get": "get_profile"}), name="get-profile"
-    ),
+    path("profile", AuthViewSet.as_view({"get": "get_profile"}), name="get-profile"),
     path(
         "profile/update",
         AuthViewSet.as_view({"put": "update_profile"}),

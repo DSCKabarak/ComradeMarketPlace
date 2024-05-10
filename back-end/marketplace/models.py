@@ -7,6 +7,7 @@ from django.dispatch import receiver
 
 CustomUser = get_user_model()
 
+
 class Category(models.Model):
     category_name = models.CharField(max_length=256)
     sub_category = models.CharField(max_length=256)
@@ -36,8 +37,12 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    merchant = models.ForeignKey(CustomUser, verbose_name=("merchant"),
-                                 related_name="product_owner",on_delete=models.DO_NOTHING)
+    merchant = models.ForeignKey(
+        CustomUser,
+        verbose_name=("merchant"),
+        related_name="product_owner",
+        on_delete=models.DO_NOTHING,
+    )
     category = models.ForeignKey(
         Category, verbose_name=("categories"), on_delete=models.DO_NOTHING
     )
@@ -96,8 +101,12 @@ class Comment(models.Model):
 
 
 class SoldProduct(models.Model):
-    merchant = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='merchant')
-    buyer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='buyer')
+    merchant = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name="merchant"
+    )
+    buyer = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name="buyer"
+    )
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     sold = models.BooleanField(default=False)
     in_stock = models.BooleanField(default=False)
@@ -107,9 +116,8 @@ class SoldProduct(models.Model):
     def __str__(self) -> str:
         return self.sold
 
-
     class Meta:
-        db_table = 'sold_products'
+        db_table = "sold_products"
 
 
 # class ConfirmPurchase(models.Model):

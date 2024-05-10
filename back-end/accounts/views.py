@@ -81,8 +81,7 @@ class AuthViewSet(viewsets.GenericViewSet):
         serializer = serializer(data=request.data)
         try:
             if not serializer.is_valid(raise_exception=True):
-                return response_handler.unauthorized(
-                "Unauthorized", serializer.errors)
+                return response_handler.unauthorized("Unauthorized", serializer.errors)
             user = serializer.validated_data
             refresh = RefreshToken.for_user(user)
             if not user.is_verified:
@@ -184,9 +183,13 @@ class AuthViewSet(viewsets.GenericViewSet):
                     },
                 )
             else:
-                return response_handler.bad_request("Invalid or expired verification token.")
+                return response_handler.bad_request(
+                    "Invalid or expired verification token."
+                )
         except EmailVerificationToken.DoesNotExist:
-            return response_handler.bad_request("Invalid or expired verification token.")
+            return response_handler.bad_request(
+                "Invalid or expired verification token."
+            )
         except Exception as e:
             return response_handler.server_error(str(e))
 

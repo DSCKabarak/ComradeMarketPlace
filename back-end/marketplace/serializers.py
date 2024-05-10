@@ -9,8 +9,11 @@ from .models import (
 )
 
 User = get_user_model()
+
+
 class ProductImageSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(required=True, allow_empty_file=False, use_url=False)
+
     class Meta:
         model = ProductImage
         fields = ["id", "product", "image", "description"]
@@ -36,7 +39,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "key_features",
             "description",
         ]
-    
+
     def validate_merchant(self, value):
         if User.objects.get(id=value.id).user_type != "merchant":
             raise serializers.ValidationError("User is not a merchant")
@@ -55,6 +58,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     comment = serializers.CharField(required=True, max_length=500)
+
     class Meta:
         model = Comment
         fields = [
@@ -64,7 +68,7 @@ class CommentSerializer(serializers.ModelSerializer):
             "comment",
             "created_at",
         ]
-    
+
     def validate_product(self, value):
         product = Product.objects.get(id=value.id)
         if not product:
