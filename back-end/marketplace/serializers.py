@@ -75,4 +75,4 @@ class CommentSerializer(serializers.ModelSerializer):
 class BookmarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bookmark
-        fields = ["user", "product_id", "favorite"]
+        fields = ["id", "user", "product_id", "favorite"]

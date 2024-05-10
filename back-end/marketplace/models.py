@@ -102,6 +102,7 @@ class SoldProduct(models.Model):
     sold = models.BooleanField(default=False)
     in_stock = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
         return self.sold
@@ -126,8 +127,8 @@ class SoldProduct(models.Model):
 
 
 class Bookmark(models.Model):
-    user = models.ForeignKey(CustomUser, null=False, on_delete=models.CASCADE)
-    product_id = models.ForeignKey(Product, null=False, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, null=False, on_delete=models.DO_NOTHING)
+    product_id = models.ForeignKey(Product, null=False, on_delete=models.DO_NOTHING)
     favorite = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

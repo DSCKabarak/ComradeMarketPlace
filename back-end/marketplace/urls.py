@@ -31,8 +31,8 @@ urlpatterns = [
     path("category/delete", CategoryViewSet.as_view({"delete": "delete_category"}), name="category-delete"),
     
     # Bookmarks
-    path("bookmarks", BookmarkViewSet.as_view({"get": "get_bookmarks"}), name="bookmark-list"),
-    path("bookmarks", BookmarkViewSet.as_view({"post": "create_bookmark"}), name="bookmark-create"),
-    path("bookmarks/<int:id>", BookmarkViewSet.as_view({"put": "update_bookmark"}), name="bookmark-update"),
-    path("bookmarks/<int:id>", BookmarkViewSet.as_view({"delete": "delete_bookmark"}), name="bookmark-delete"),
+    path("user/product-bookmarks", BookmarkViewSet.as_view({"get": "get_bookmarks_by_user"}), name="bookmark-list"),
+    path("product-bookmark/add", BookmarkViewSet.as_view({"post": "create_bookmark"}), name="bookmark-create"),
+    path("toggle/favorite", BookmarkViewSet.as_view({"put": "update_bookmark"}), name="bookmark-update"),
+    path("product-bookmark/delete", BookmarkViewSet.as_view({"delete": "delete_bookmark"}), name="bookmark-delete"),
 ]

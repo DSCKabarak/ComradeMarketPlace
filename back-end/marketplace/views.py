@@ -309,9 +309,11 @@ class BookmarkViewSet(viewsets.ModelViewSet):
         ],
         detail=False,
     )
-    def get_bookmarks(self, request):
-        bookmark = Bookmark.objects.filter(user=request.user)
-        serializer = self.get_serializer(Bookmark, many=True)
+    def get_bookmarks_by_user(self, request):
+        bookmarks = Bookmark.objects.filter(user=request.user)
+        if not bookmarks.exists():
+            return response_handler.bad_request("No bookmarks found")
+        serializer = self.get_serializer(bookmarks, many=True)
         return response_handler.success("Bookmarks found",serializer.data)
 
     @action(
@@ -321,6 +323,7 @@ class BookmarkViewSet(viewsets.ModelViewSet):
         detail=False,
     )
     def create_bookmark(self, request):
+        request.data["user"] = request.user.id
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid(raise_exception=True):
             return response_handler.bad_request(errors=serializer.errors)
@@ -336,7 +339,7 @@ class BookmarkViewSet(viewsets.ModelViewSet):
     )
     def update_bookmark(self, request):
         bookmark = Bookmark.objects.get(id=request.data.get("id"))
-        serializer = self.get_serializer(bookmark, data=request.data)
+        serializer = self.get_serializer(bookmark, data=request.data, partial=True)
         if not serializer.is_valid(raise_exception=True):
             return response_handler.bad_request(errors=serializer.errors)
         serializer.save()
@@ -350,6 +353,12 @@ class BookmarkViewSet(viewsets.ModelViewSet):
         detail=False,
     )
     def delete_bookmark(self, request):
-        bookmark = Bookmark.objects.get(id=request.data.get("id"))
+        bookmark_id = request.query_params.get("id")
+        if not bookmark_id:
+            return response_handler.bad_request("Bookmark ID is required")
+        try:
+            bookmark = Bookmark.objects.get(id=bookmark_id)
+        except Bookmark.DoesNotExist:
+            return response_handler.bad_request("Bookmark not found")
         bookmark.delete()
         return response_handler.no_content("Bookmark deleted successfully")
