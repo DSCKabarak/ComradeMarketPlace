@@ -53,20 +53,22 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    comment = serializers.CharField(required=True, max_length=500)
     class Meta:
         model = Comment
         fields = [
             "id",
-            "product",
             "user",
+            "product",
             "comment",
             "created_at",
         ]
     
     def validate_product(self, value):
-        if not Product.objects.filter(id=value.id).exists():
+        product = Product.objects.get(id=value.id)
+        if not product:
             raise serializers.ValidationError("Product does not exist")
-        return value
+        return product
 
 
 class BookmarkSerializer(serializers.ModelSerializer):

@@ -128,8 +128,10 @@ class CommentViewSet(viewsets.ModelViewSet):
     )
     def get_comments_by_product(self, request):
         product_id = request.query_params.get("product_id")
+        if not product_id:
+            return response_handler.bad_request(message="Product ID is required")
         try:
-            product = Product.objects.get(id=product_id)
+            product = Product.objects.get(id=int(product_id))
             comments = Comment.objects.filter(product=product).all()
         except Product.DoesNotExist:
             return response_handler.bad_request(message="Product not found")
@@ -137,6 +139,8 @@ class CommentViewSet(viewsets.ModelViewSet):
             return response_handler.bad_request(message="No comments found")
         except Exception as e:
             return response_handler.server_error(message=e)
+        if len(comments) == 0:
+            return response_handler.success(message="No comments found")
         serializer = self.get_serializer(comments, many=True)
         return response_handler.success("Comments found",serializer.data)
 
@@ -149,6 +153,8 @@ class CommentViewSet(viewsets.ModelViewSet):
             return response_handler.bad_request(message="No comments found")
         except Exception as e:
             return response_handler.server_error(message=e)
+        if len(comments) == 0:
+            return response_handler.success(message="No comments found")
         serializer = self.get_serializer(comments, many=True)
         return response_handler.success("Comments found",serializer.data)
 
@@ -160,18 +166,18 @@ class CommentViewSet(viewsets.ModelViewSet):
     )
     def post_comment(self, request):
         user = request.user
-        product_id = request.data.get("product_id")
+        product_id = request.data.get("product")
+        request.data["user"] = user.id
         try:
             product = Product.objects.get(id=product_id)
-            SoldProduct.objects.filter(product=product, user=user)
+            SoldProduct.objects.filter(product=product, merchant=user)
         except Product.DoesNotExist:
             return response_handler.bad_request(message="Product not found")
         except SoldProduct.DoesNotExist:
             return response_handler.forbidden(message="You are not authorized to perform this action")
         except Exception as e:
-            return response_handler.server_error(message=e)
+            return response_handler.server_error(message=str(e))
         serializer = self.get_serializer(data=request.data)
-        
         
         if not serializer.is_valid(raise_exception=True):
             return response_handler.bad_request(errors=serializer.errors)
@@ -193,12 +199,12 @@ class CommentViewSet(viewsets.ModelViewSet):
         user = Users.objects.get(id=user.id)
         try:
             comment = Comment.objects.filter(id=comment_id, user=user)
-        except Comment.DoesNotExist:
-            return response_handler.bad_request(message="Comment not found")
+            if not comment.exists():
+                return response_handler.bad_request(message="Comment not found")
         except Exception as e:
             return response_handler.server_error(message=e)
         comment.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return response_handler.success("Comment deleted successfully")
 
 
 class ProductImageViewSet(viewsets.ModelViewSet):

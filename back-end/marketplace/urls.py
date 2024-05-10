@@ -18,7 +18,7 @@ urlpatterns = [
     path("product/comments", CommentViewSet.as_view({"get": "get_comments_by_product"}), name="product-comment-list"),
     path("user/comments", CommentViewSet.as_view({"get": "get_comments_by_user"}), name="user-comment-list"),
     path("comments", CommentViewSet.as_view({"post": "post_comment"}), name="comment-create"),
-    path("comments/<int:id>", CommentViewSet.as_view({"delete": "delete_comment"}), name="comment-delete"),
+    path("comments/delete", CommentViewSet.as_view({"delete": "delete_comment"}), name="comment-delete"),
     
     # Product Images
     path("product-images/<int:product_id>/images", ProductImageViewSet.as_view({"get": "images"}), name="product-image-list"),
