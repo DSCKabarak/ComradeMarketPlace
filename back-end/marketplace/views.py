@@ -1,8 +1,13 @@
 from rest_framework.response import Response
-from notifications.notify import send_single_notification
-
 from rest_framework import status, viewsets
+from django.db.models import Q
 from rest_framework.decorators import action
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiParameter,
+    OpenApiTypes,
+    OpenApiResponse,
+)
 from rest_framework import permissions
 from .serializers import (
     ProductImageSerializer,
@@ -13,13 +18,17 @@ from .serializers import (
 )
 from .models import (
     Product,
+    SoldProduct,
     ProductImage,
     Category,
     Comment,
     Bookmark,
 )
-from notifications.notify import send_mass_notification, send_single_notification
-from accounts.models import CustomUser
+from utils.response_utils import ApiResponse
+from django.contrib.auth import get_user_model
+
+Users = get_user_model()
+response_handler = ApiResponse()
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -34,82 +43,74 @@ class ProductViewSet(viewsets.ModelViewSet):
         detail=False,
     )
     def get_products(self, request):
-        products = Product.objects.all()
-        serializer = self.get_serializer(products, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        user = request.user
+        try:
+            products = Product.objects.filter(merchant=user)
+            serializer = self.get_serializer(products, many=True)
+        except Product.DoesNotExist:
+            return response_handler.bad_request(message="No products found")
+        except Exception as e:
+            return response_handler.server_error(message=e)
+        return response_handler.success("all found products", serializer.data)
 
+    @extend_schema(
+        operation_id="create_product",
+        request=serializer_class,
+        responses={201: OpenApiResponse(description="Product created successfully")},
+    )
     @action(
-        methods=[
-            "POST",
-        ],
+        methods=["POST"],
         detail=False,
     )
     def create_product(self, request):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            product = serializer.save()
+        user = request.user
+        request.data["merchant"] = user.id
+        try:
+            serializer = self.get_serializer(data=request.data)
+            if not serializer.is_valid():
+                return response_handler.bad_request(errors=serializer.errors)
+        except Exception as e:
+            return response_handler.server_error(message=str(e))
+        serializer.save()
+        return response_handler.created("Product created successfully", serializer.data)
 
-            email_data = list()
-            buyers = CustomUser.objects.filter(user_type="buyer")
-
-            for buyer in buyers:
-                email_data.append(
-                    (
-                        f"Hello, {buyer.email}, a new product has been added to the marketplace.",
-                        buyer.email,
-                        {
-                            "product_name": product.product_name,
-                            "product_description": product.description,
-                            "product_price": product.price,
-                            # "product_image": product.productimage_set.first().image.url,
-                            "product_category": product.category.get_category_name(),
-                            "product_key_features": product.key_features,
-                        },
-                        f"A new product {product.product_name} has been added to the marketplace.",
-                    )
-                )
-            try:
-                send_mass_notification(
-                    data=email_data,
-                    notification_type="product_added",
-                    template="product_added.html",
-                )
-                print("Emails sent successfully.")
-            except Exception as e:
-                raise Exception(
-                    f"An error occurred while sending notifications: {str(e)}"
-                )
-            try:
-                send_single_notification(
-                    subject=f"Hello, {product.merchant.get_full_name()}, your product has been added to the marketplace.",
-                    recipient=product.merchant.email,
-                    content=f"Your product {product.product_name} has been added to the marketplace.",
-                    description=f"Your product {product.product_name} has been added to the marketplace.",
-                    notification_type="product_added",
-                )
-                print("Email sent successfully.")
-            except Exception as e:
-                raise Exception(
-                    f"An error occurred while sending notifications: {str(e)}"
-                )
-
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(
-        methods=[
-            "PUT",
+    @extend_schema(
+        operation_id="update_product",
+        parameters=[
+            OpenApiParameter(
+                name="id",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="Product ID",
+            )
         ],
+        request=serializer_class,
+        responses={200: OpenApiResponse(description="Product updated successfully")},
+    )
+    @action(
+        methods=["PUT"],
         detail=False,
     )
     def update_product(self, request):
-        product = Product.objects.get(id=request.data.get("id"))
+        product_id = request.query_params.get("id")
+        user = request.user
+        request.data["merchant"] = user.id
+        if not product_id:
+            return response_handler.bad_request(message="Product ID is required")
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return response_handler.bad_request(message="Product not found")
+        except Exception as e:
+            return response_handler.server_error(message=e)
         serializer = self.get_serializer(product, data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception:
+            return response_handler.bad_request(errors=serializer.errors)
+        serializer.save()
+        return response_handler.success("Product updated successfully", serializer.data)
 
     @action(
         methods=[
@@ -118,9 +119,27 @@ class ProductViewSet(viewsets.ModelViewSet):
         detail=False,
     )
     def delete_product(self, request):
-        product = Product.objects.get(id=request.data.get("id"))
+        user = request.user
+        user = Users.objects.get(id=user.id)
+        product_id = request.query_params.get("id")
+        if not product_id:
+            return response_handler.bad_request(message="Product ID is required")
+        if user.user_type != "merchant":
+            return response_handler.forbidden(
+                message="You are not authorized to perform this action"
+            )
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return response_handler.bad_request(message="Product not found")
+        except Exception as e:
+            return response_handler.server_error(message=e)
+        if user != product.merchant:
+            return response_handler.forbidden(
+                message="You are not authorized to perform this action"
+            )
         product.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return response_handler.success("Product deleted successfully")
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -134,37 +153,70 @@ class CommentViewSet(viewsets.ModelViewSet):
         ],
         detail=False,
     )
-    def get_comments(self, request):
-        comments = Comment.objects.all()
+    def get_comments_by_product(self, request):
+        product_id = request.query_params.get("id")
+        if not product_id:
+            return response_handler.bad_request(message="Product ID is required")
+        try:
+            product = Product.objects.get(id=int(product_id))
+            comments = Comment.objects.filter(product=product).all()
+        except Product.DoesNotExist:
+            return response_handler.bad_request(message="Product not found")
+        except Comment.DoesNotExist:
+            return response_handler.bad_request(message="No comments found")
+        except Exception as e:
+            return response_handler.server_error(message=e)
+        if len(comments) == 0:
+            return response_handler.success(message="No comments found")
         serializer = self.get_serializer(comments, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return response_handler.success("Comments found", serializer.data)
 
     @action(
-        methods=[
-            "POST",
-        ],
+        methods=["GET"],
+        detail=False,
+    )
+    def get_comments_by_user(self, request):
+        user = request.user
+        try:
+            comments = Comment.objects.filter(user=user).all()
+        except Comment.DoesNotExist:
+            return response_handler.bad_request(message="No comments found")
+        except Exception as e:
+            return response_handler.server_error(message=e)
+        if len(comments) == 0:
+            return response_handler.success(message="No comments found")
+        serializer = self.get_serializer(comments, many=True)
+        return response_handler.success("Comments found", serializer.data)
+
+    @extend_schema(
+        request=serializer_class,
+        responses={201: OpenApiResponse(description="Comment posted successfully")},
+    )
+    @action(
+        methods=["POST"],
         detail=False,
     )
     def post_comment(self, request):
+        user = request.user
+        product_id = request.data.get("product")
+        request.data["user"] = user.id
+        try:
+            product = Product.objects.get(id=product_id)
+            SoldProduct.objects.filter(product=product, merchant=user)
+        except Product.DoesNotExist:
+            return response_handler.bad_request(message="Product not found")
+        except SoldProduct.DoesNotExist:
+            return response_handler.forbidden(
+                message="You are not authorized to perform this action"
+            )
+        except Exception as e:
+            return response_handler.server_error(message=str(e))
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(
-        methods=[
-            "PUT",
-        ],
-        detail=False,
-    )
-    def update_comment(self, request):
-        comment = Comment.objects.get(id=request.data.get("id"))
-        serializer = self.get_serializer(comment, data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if not serializer.is_valid(raise_exception=True):
+            return response_handler.bad_request(errors=serializer.errors)
+        serializer.save()
+        return response_handler.created("Comment posted successfully", serializer.data)
 
     @action(
         methods=[
@@ -173,50 +225,61 @@ class CommentViewSet(viewsets.ModelViewSet):
         detail=False,
     )
     def delete_comment(self, request):
-        comment = Comment.objects.get(id=request.data.get("id"))
+        user = request.user
+        comment_id = request.query_params.get("id")
+        if not comment_id:
+            return response_handler.bad_request(message="Comment ID is required")
+        user = Users.objects.get(id=user.id)
+        try:
+            comment = Comment.objects.filter(id=comment_id, user=user)
+            if not comment.exists():
+                return response_handler.bad_request(message="Comment not found")
+        except Exception as e:
+            return response_handler.server_error(message=e)
         comment.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return response_handler.success("Comment deleted successfully")
 
 
 class ProductImageViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    queryset = Product.objects.all()
+    queryset = ProductImage.objects.all()
     serializer_class = ProductImageSerializer
 
-    @action(
-        methods=["GET", "POST", "PUT", "DELETE"],
-        detail=True,
-        serializer_class=ProductImageSerializer,
+    @action(detail=False, methods=["GET"])
+    def get_images(self, request):
+        product_id = request.query_params.get("id")
+        if not product_id:
+            return response_handler.bad_request(message="Product ID is required")
+
+        try:
+            images = ProductImage.objects.filter(product=product_id).all()
+            if not images.exists():
+                return response_handler.success(message="No images found")
+        except Exception as e:
+            return response_handler.server_error(message=str(e))
+        serializer = self.get_serializer(images, many=True)
+        return response_handler.success("Images found", serializer.data)
+
+    @extend_schema(
+        request=serializer_class,
+        responses={201: OpenApiResponse(description="Image uploaded successfully")},
     )
-    def images(self, request, pk=None):
-        product = self.get_object()
+    @action(
+        methods=["POST"],
+        detail=False,
+    )
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid(raise_exception=True):
+            return response_handler.bad_request(errors=serializer.errors)
+        serializer.save()
+        return response_handler.created("Image uploaded successfully", serializer.data)
 
-        if request.method == "GET":
-            images = ProductImage.objects.filter(product=product)
-            serializer = self.get_serializer(images, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        # Saving the new image and returning the serialized data
-        # with a 201 status code indicating a successful creation.
-        elif request.method == "POST":
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save(product=product)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        # Updating an existing product image using PUT method.
-        elif request.method == "PUT":
-            product_image = self.get_object()
-            serializer = self.get_serializer(product_image, data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        # Delete the specific product image
-        elif request.method == "DELETE":
-            product_image = self.get_object()
-            product_image.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+    @action(methods=["DELETE"], detail=False)
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        return response_handler.success("Image deleted successfully")
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -235,44 +298,49 @@ class CategoryViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(categories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @extend_schema(
+        request=serializer_class,
+        responses={201: OpenApiResponse(description="Category created successfully")},
+    )
     @action(
-        methods=[
-            "POST",
-        ],
+        methods=["POST"],
         detail=False,
     )
     def create_category(self, request):
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            category = serializer.save()
-            send_single_notification(
-                subject="New Product Added",
-                recipient="michaelwekesa@kabarak.ac.ke",
-                content={
-                    "product_name": category.category_name,
-                    "product_description": category.sub_category,
-                    # Add more relevant product details
-                },
-                notification_type="product_added",
-                description="A new product has been added.",
-                sender="wekesa360@outlook.com",
-            )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if not serializer.is_valid(raise_exception=True):
+            return response_handler.bad_request("Bad request", errors=serializer.errors)
+        category_name = serializer.validated_data.get("category_name", " ").lower()
+        sub_category = serializer.validated_data.get("sub_category", " ").lower()
+        if Category.objects.filter(
+            Q(category_name__iexact=category_name)
+            | Q(sub_category__iexact=sub_category)
+        ).exists():
+            return response_handler.bad_request("Category already exists")
+
+        serializer.save(category_name=category_name, sub_category=sub_category)
+        return response_handler.created(
+            "Category created successfully", serializer.data
+        )
 
     @action(
         methods=[
-            "PUT",
+            "DELETE",
         ],
         detail=False,
     )
-    def update_category(self, request):
-        category = Category.objects.get(id=request.data.get("id"))
-        serializer = self.get_serializer(category, data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete_category(self, request):
+        category_id = request.query_params.get("id")
+        if not category_id:
+            return response_handler.bad_request("Category ID is required")
+        try:
+            category = Category.objects.get(id=category_id)
+            category.delete()
+        except Category.DoesNotExist:
+            return response_handler.bad_request("Category not found")
+        except Exception as e:
+            return response_handler.server_error(message=e)
+        return response_handler.success("Category deleted successfully")
 
 
 class BookmarkViewSet(viewsets.ModelViewSet):
@@ -286,38 +354,48 @@ class BookmarkViewSet(viewsets.ModelViewSet):
         ],
         detail=False,
     )
-    def get_bookmarks(self, request):
-        bookmark = Bookmark.objects.all()
-        serializer = self.get_serializer(Bookmark, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get_bookmarks_by_user(self, request):
+        bookmarks = Bookmark.objects.filter(user=request.user)
+        if not bookmarks.exists():
+            return response_handler.bad_request("No bookmarks found")
+        serializer = self.get_serializer(bookmarks, many=True)
+        return response_handler.success("Bookmarks found", serializer.data)
 
+    @extend_schema(
+        request=serializer_class,
+        responses={201: OpenApiResponse(description="Bookmark created successfully")},
+    )
     @action(
-        methods=[
-            "POST",
-        ],
+        methods=["POST"],
         detail=False,
     )
     def create_bookmark(self, request):
+        request.data["user"] = request.user.id
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if not serializer.is_valid(raise_exception=True):
+            return response_handler.bad_request(errors=serializer.errors)
+        serializer.save()
+        return response_handler.created(
+            "Bookmark created successfully", serializer.data
+        )
 
+    @extend_schema(
+        request=serializer_class,
+        responses={200: OpenApiResponse(description="Bookmark updated successfully")},
+    )
     @action(
-        methods=[
-            "PUT",
-        ],
+        methods=["PUT"],
         detail=False,
     )
     def update_bookmark(self, request):
         bookmark = Bookmark.objects.get(id=request.data.get("id"))
-        seriaizer = self.get_serializer
-        serializer = self.get_serializer(bookmark, data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(bookmark, data=request.data, partial=True)
+        if not serializer.is_valid(raise_exception=True):
+            return response_handler.bad_request(errors=serializer.errors)
+        serializer.save()
+        return response_handler.success(
+            "Bookmark updated successfully", serializer.data
+        )
 
     @action(
         methods=[
@@ -326,6 +404,12 @@ class BookmarkViewSet(viewsets.ModelViewSet):
         detail=False,
     )
     def delete_bookmark(self, request):
-        bookmark = Bookmark.objects.get(id=request.data.get("id"))
+        bookmark_id = request.query_params.get("id")
+        if not bookmark_id:
+            return response_handler.bad_request("Bookmark ID is required")
+        try:
+            bookmark = Bookmark.objects.get(id=bookmark_id)
+        except Bookmark.DoesNotExist:
+            return response_handler.bad_request("Bookmark not found")
         bookmark.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return response_handler.no_content("Bookmark deleted successfully")

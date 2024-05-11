@@ -4,6 +4,7 @@ venv/
 env/
 __pycache__/
 */__pycache__/*
+ComradeMarketPlace.code-workspace
 migrations/
 */migrations/
 staticfiles/
