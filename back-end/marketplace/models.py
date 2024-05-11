@@ -11,7 +11,7 @@ CustomUser = get_user_model()
 class Category(models.Model):
     category_name = models.CharField(max_length=256)
     sub_category = models.CharField(max_length=256)
-    slug = models.CharField(max_length=256, blank=True, null=True)
+    slug = models.CharField(max_length=256, blank=True, null=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -50,7 +50,7 @@ class Product(models.Model):
     price = models.DecimalField(decimal_places=2, max_digits=10)
     in_stock = models.BooleanField(default=False)
     tag = models.CharField(max_length=256)
-    slug = models.CharField(max_length=256, blank=True, null=True)
+    slug = models.CharField(max_length=256, blank=True, null=True, editable=False)
     brand = models.CharField(max_length=256)
     key_features = models.TextField()
     description = models.TextField()

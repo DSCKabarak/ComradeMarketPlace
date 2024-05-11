@@ -8,6 +8,5 @@ ComradeMarketPlace.code-workspace
 migrations/
 */migrations/
 staticfiles/
-static/
 schema.yml
 *.log
