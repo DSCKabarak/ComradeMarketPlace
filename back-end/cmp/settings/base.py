@@ -217,6 +217,7 @@ MEDIA_URL = "/media/"
 #     os.path.join(BASE_DIR, "static"),
 # ]
 
+
 STORAGES = {
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
