@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from notifications.notify import send_new_category_notification
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from utils.file_size_validator import FileSizeValidator
 
 CustomUser = get_user_model()
 
@@ -72,7 +73,7 @@ class ProductImage(models.Model):
     product = models.ForeignKey(
         Product, related_name="images", on_delete=models.DO_NOTHING
     )
-    image = models.ImageField(upload_to="uploads/product/images/")
+    image = models.ImageField(upload_to="uploads/product/images/", validators=[FileSizeValidator()])
     description = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

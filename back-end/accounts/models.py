@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import BaseUserManager
+from utils.file_size_validator import FileSizeValidator
 
 
 class UserManager(BaseUserManager):
@@ -53,7 +54,7 @@ class CustomUser(AbstractUser):
     is_verified = models.BooleanField(default=False)
     phone_number = models.CharField(max_length=10, default="07XXXXXXXX")
     user_type = models.CharField(max_length=90, choices=TYPE_CHOICES)
-    avatar = models.FileField(upload_to="user/uploads/avatar/", null=True)
+    avatar = models.FileField(upload_to="user/uploads/avatar/", null=True, validators=[FileSizeValidator()])
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
