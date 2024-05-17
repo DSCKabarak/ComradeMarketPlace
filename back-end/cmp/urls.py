@@ -25,8 +25,10 @@ from drf_spectacular.views import (
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
+from marketplace.views import api_documentation_view
 
 urlpatterns = [
+    path("", api_documentation_view, name="api-documentation"),
     path("admin/", admin.site.urls),
     path("api/marketplace/", include(marketplace_urls)),
     path("api/accounts/", include(accounts_urls)),

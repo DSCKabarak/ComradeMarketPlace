@@ -26,10 +26,15 @@ from .models import (
 )
 from utils.response_utils import ApiResponse
 from django.contrib.auth import get_user_model
+from django.shortcuts import render
 
 Users = get_user_model()
 response_handler = ApiResponse()
 
+
+
+def api_documentation_view(request):
+    return render(request, 'index.html')
 
 class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
