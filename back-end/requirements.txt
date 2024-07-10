@@ -1,5 +1,5 @@
 asgiref==3.8.1
-Django==5.0.4
+Django==5.0.7
 django-autoslug==1.9.9
 django-jazzmin==3.0.0
 djangorestframework==3.15.1
